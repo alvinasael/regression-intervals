@@ -157,6 +157,16 @@ figcaption b{color:var(--ink);font-weight:600}
 .symtbl td:last-child{color:var(--text-soft);white-space:nowrap}
 @media(max-width:560px){.symtbl td:last-child,.symtbl th:last-child{display:none}}
 
+.gl{padding:15px 0;border-top:1px solid var(--rule)}
+.gl:first-of-type{border-top:none}
+.gl .gt{font-family:"Fraunces",serif;font-weight:500;font-size:17px;color:var(--ink);margin-bottom:8px}
+.gl .gd{display:grid;grid-template-columns:82px 1fr;gap:7px 14px;font-size:15.5px;line-height:1.55}
+.gl .gl-lbl{font-family:system-ui,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding-top:4px}
+.gl .tec{color:var(--ci)}
+.gl .ater{color:var(--truth)}
+.gl .gd div{max-width:62ch}
+@media(max-width:560px){.gl .gd{grid-template-columns:1fr;gap:2px 0}.gl .gl-lbl{padding-top:8px}}
+
 /* ---------- Responsive ---------- */
 .menubtn{display:none}
 @media(max-width:920px){
@@ -195,6 +205,7 @@ figcaption b{color:var(--ink);font-weight:600}
       <li><a href="#s11"><span class="num">11</span><span>Cómo mejorar el PI</span></a></li>
       <li><a href="#s12"><span class="num">12</span><span>Síntesis operativa</span></a></li>
       <li><a href="#formulario"><span class="num">∑</span><span>Apéndice · Formulario</span></a></li>
+      <li><a href="#glosario"><span class="num">Az</span><span>Apéndice · Glosario</span></a></li>
     </ul>
   </nav>
   <div class="sb-key">
@@ -716,6 +727,111 @@ figcaption b{color:var(--ink);font-weight:600}
   <div class="callout note">
     <span class="clabel">Una nota de notación</span>
     <p>La <strong>b</strong> de la media-anchura del PI no es la <strong>b̂</strong> de la pendiente. Mismo símbolo, cosas distintas: la pendiente lleva sombrero (b̂) y la media-anchura no (b). El hilo que une todo el formulario: cada fórmula arranca de <strong>s</strong> (dispersión residual). El CI le suma la geometría de la recta (1/n + palanca); el PI le suma además el <strong>1</strong> del lente individual. Cambiar σ mueve s y escala todo; cambiar n o Sₓₓ solo toca los términos de la recta.</p>
+  </div>
+</section>
+
+<section id="glosario">
+  <div class="sec-num">Apéndice</div>
+  <h2>Glosario de conceptos</h2>
+  <p>Cada término con dos definiciones: la <span class="cci">técnica</span>, rigurosa, y la <span class="ctr">aterrizada</span>, en español llano y atada a los lentes. Para cuando un concepto necesita entenderse, no solo buscarse.</p>
+
+  <div class="gl">
+    <div class="gt">Varianza ($\sigma^2$)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>El valor esperado del cuadrado de la desviación respecto a la media: $\mathbb{E}[(Y-\mu)^2]$. Mide dispersión en unidades al cuadrado.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Qué tan regados están los datos alrededor de su promedio — pero medido en "unidades al cuadrado" (dioptrías²), por eso es incómoda de leer directo y casi siempre le sacamos la raíz.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Desviación estándar ($\sigma,\ s$)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>La raíz cuadrada de la varianza, $\sqrt{\sigma^2}$.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>La distancia típica de un dato a su promedio, ya en las mismas unidades que mides (dioptrías). Si te dicen "σ = 0.12 D", un lente típico cae a unas 0.12 D de donde debería.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Error estándar (en general)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>La desviación estándar de la distribución muestral de un estimador — cuánto varía el estimador de una muestra a otra.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Cuánto "tiembla" tu número calculado si repitieras el experimento con otra muestra. No es la dispersión de los datos, sino la incertidumbre de lo que estimaste con ellos.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Error estándar de la estimación ($s$, S·y·x)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>$s=\sqrt{\text{SSE}/(n-2)}$. La desviación estándar de los residuos; es el estimador muestral de $\sigma$.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>El largo típico de un residuo: cuánto se despega un lente de la recta, en promedio. Es el "ruido" que la recta no logra explicar.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Residuo ($y_i-\hat{y}_i$)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>La diferencia entre el valor observado y el predicho por la recta en ese punto.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Cuánto se equivocó la recta en ese lente — la distancia vertical del punto a la línea.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Grados de libertad ($n-2$)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>Número de observaciones menos el número de parámetros estimados (aquí 2: intersección y pendiente).</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Cuánta información "libre" te queda para medir la dispersión después de gastar datos en clavar la recta. Con 2 puntos la recta pasa exacta y no ves ruido; recién con el tercero empiezas a verlo.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Media condicional ($\mathbb{E}[Y\mid X=x_0]$)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>El valor esperado de Y dado un valor fijo de X.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>El promedio de wet entre todos los lentes que comparten ese mismo dry — un corte vertical, no el promedio de todo el conjunto.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Intervalo de confianza (CI)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>Rango que, sobre repeticiones del muestreo, contiene al parámetro verdadero (aquí la media condicional) el $(1-\alpha)\%$ de las veces.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Dónde está la recta verdadera —el promedio— en ese dry. Angosto, porque solo carga la incertidumbre de la línea.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Intervalo de predicción (PI)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>Rango que contiene a una observación individual futura con probabilidad $(1-\alpha)$.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Dónde caerá un lente nuevo medido en ese dry. Ancho, porque carga la incertidumbre de la línea más el ruido propio del lente.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">R² (coeficiente de determinación)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>$1-\text{SSE}/\text{SST}$. La fracción de la variación total de Y explicada por el modelo.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>De toda la variación de los wet, qué porción "explica" el dry. Es un porcentaje (0 a 1), no una distancia: no te dice cuántas dioptrías de error hay.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">t de Student</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>La distribución de referencia para inferencia cuando $\sigma$ se estima de la muestra; aquí con $n-2$ grados de libertad.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>El multiplicador que ensancha el intervalo un poco extra para cubrir el hecho de que no conoces σ y la estimaste. Con muchos datos se acerca a 1.96 (el de la normal).</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Brazo de palanca / leverage ($(x_0-\bar{x})^2/S_{xx}$)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>El peso de un punto según su distancia al centroide; infla la varianza de $\hat{y}$ lejos de $\bar{x}$.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Cuán lejos del centro de tus datos estás preguntando. En el centro la recta está bien sujeta; en las orillas un pelo de error de pendiente se amplifica y el intervalo se abre.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Homocedasticidad</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>El supuesto de que la varianza del error es constante a lo largo de X.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Que los lentes se dispersan igual en todos los niveles de potencia. Si a −6 D varían más que a −2 D, el supuesto se rompe y un solo s te miente.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">Estimador vs. parámetro</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>El parámetro ($\sigma,\alpha,\beta$) es una cantidad fija de la población; el estimador ($s,\hat{a},\hat{b}$) es una función de la muestra que lo aproxima.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>El parámetro es la verdad que no ves; el estimador es tu mejor adivinanza calculada con los datos. Los sombreros (â, b̂) marcan "esto es una adivinanza".</div>
+    </div>
   </div>
 </section>
 
