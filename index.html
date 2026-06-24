@@ -150,6 +150,13 @@ figcaption b{color:var(--ink);font-weight:600}
 .tk .tref:hover{background:var(--ci);color:#fff;border-color:var(--ci)}
 @media(max-width:560px){.tk{grid-template-columns:26px 1fr}.tk .tref{grid-column:2;justify-self:start;margin-top:5px}}
 
+.symtbl{width:100%;border-collapse:collapse;font-family:system-ui,sans-serif;font-size:14.5px;margin:18px 0}
+.symtbl th,.symtbl td{padding:8px 14px;text-align:left;border-bottom:1px solid var(--rule);vertical-align:top}
+.symtbl thead th{color:var(--ink);font-weight:600;border-bottom:1.5px solid var(--ink)}
+.symtbl td:first-child{white-space:nowrap;padding-right:22px}
+.symtbl td:last-child{color:var(--text-soft);white-space:nowrap}
+@media(max-width:560px){.symtbl td:last-child,.symtbl th:last-child{display:none}}
+
 /* ---------- Responsive ---------- */
 .menubtn{display:none}
 @media(max-width:920px){
@@ -187,6 +194,7 @@ figcaption b{color:var(--ink);font-weight:600}
       <li><a href="#s10"><span class="num">10</span><span>R² frente a s</span></a></li>
       <li><a href="#s11"><span class="num">11</span><span>Cómo mejorar el PI</span></a></li>
       <li><a href="#s12"><span class="num">12</span><span>Síntesis operativa</span></a></li>
+      <li><a href="#formulario"><span class="num">∑</span><span>Apéndice · Formulario</span></a></li>
     </ul>
   </nav>
   <div class="sb-key">
@@ -640,6 +648,75 @@ figcaption b{color:var(--ink);font-weight:600}
     <p><span class="cci">Centrar el proceso</span> → mira el CI (y bajalo con n y Sₓₓ). &nbsp;·&nbsp; <span class="cpi">Juzgar piezas</span> → usa el PI punto a punto. &nbsp;·&nbsp; <span class="ctr">Estrechar el PI</span> → no junta datos, reducí σ mejorando el proceso.</p>
   </div>
   <p style="color:#5A6068;font-size:15px;margin-top:30px">Las figuras de este documento son interactivas y comparten el mismo conjunto de datos sintético (n = 14, recta verdadera wet = 2 + 1.4·dry, σ ≈ 2.4 D) para que la recta y los puntos sean los mismos a lo largo de toda la lectura.</p>
+</section>
+
+<section id="formulario">
+  <div class="sec-num">Apéndice</div>
+  <h2>Formulario de referencia</h2>
+  <p>Todas las ecuaciones del documento, en el orden en que se construyen unas sobre otras. Primero la leyenda de símbolos; luego las fórmulas agrupadas. Los términos van coloreados según su significado: <span class="ctr">altura del ancla</span>, <span class="cco">pendiente × brazo²</span>, <span class="cpi">dispersión individual</span>.</p>
+
+  <h3>Tabla de símbolos</h3>
+  <table class="symtbl">
+    <thead><tr><th>Símbolo</th><th>Qué es</th><th>Rol · eje</th></tr></thead>
+    <tbody>
+      <tr><td>$\hat{y}$</td><td>Valor de wet predicho por la recta</td><td>Estimación · y</td></tr>
+      <tr><td>$\mu(x)$</td><td>Recta verdadera / media condicional de wet</td><td>Verdad · y</td></tr>
+      <tr><td>$\hat{a},\ \hat{b}$</td><td>Intersección y pendiente estimadas</td><td>Coeficientes (muestra)</td></tr>
+      <tr><td>$\alpha,\ \beta$</td><td>Intersección y pendiente verdaderas</td><td>Coeficientes (población)</td></tr>
+      <tr><td>$\bar{y}$</td><td>Promedio de los wet de la muestra</td><td>· y</td></tr>
+      <tr><td>$\bar{x}$</td><td>Promedio de los dry de la muestra</td><td>· x</td></tr>
+      <tr><td>$x_0$</td><td>El dry que le das al modelo</td><td>Entrada · x</td></tr>
+      <tr><td>$(x_0-\bar{x})^2$</td><td>Brazo de palanca al cuadrado: distancia de x₀ al centroide</td><td>Geometría · x</td></tr>
+      <tr><td>$n$</td><td>Número de pares (dry, wet) ajustados</td><td>Tamaño de muestra</td></tr>
+      <tr><td>$s$</td><td>Error estándar de la estimación (S, S·y·x)</td><td>Dispersión residual · y</td></tr>
+      <tr><td>$\sigma$</td><td>Desviación estándar verdadera del proceso</td><td>Dispersión real · y</td></tr>
+      <tr><td>$\sigma^2$</td><td>Varianza del proceso (σ al cuadrado)</td><td>Unidad base de varianza</td></tr>
+      <tr><td>$S_{xx}$</td><td>$\sum (x_i-\bar{x})^2$ — dispersión de los dry</td><td>· x</td></tr>
+      <tr><td>$S_{xy}$</td><td>$\sum (x_i-\bar{x})(y_i-\bar{y})$ — covariación</td><td>dry–wet</td></tr>
+      <tr><td>$t$</td><td>t de Student, n−2 g.l., 95% de dos colas</td><td>Factor de confianza</td></tr>
+      <tr><td>$b$</td><td>Media-anchura del PI (ŷ ± b) — no es $\hat{b}$</td><td>Margen · y</td></tr>
+      <tr><td>$\text{SSE}$</td><td>$\sum (y_i-\hat{y}_i)^2$ — suma de cuadrados residual</td><td>Error</td></tr>
+      <tr><td>$\text{SST}$</td><td>$\sum (y_i-\bar{y})^2$ — variación total de wet</td><td>Total</td></tr>
+      <tr><td>$R^2$</td><td>Fracción de la variación explicada</td><td>Calidad (relativo)</td></tr>
+      <tr><td>$F$</td><td>Razón de varianzas $s^2_{\text{nuevo}}/s^2_{\text{viejo}}$</td><td>Test de mejora</td></tr>
+    </tbody>
+  </table>
+
+  <h3>El modelo</h3>
+  <div class="eqwrap">$$\begin{aligned} \hat{y} &= \hat{a} + \hat{b}\,x \\ \mu(x) &= \alpha + \beta\,x \\ \mu(x_0) &= \mathbb{E}[\,Y \mid X = x_0\,] \end{aligned}$$</div>
+
+  <h3>Estimación de los coeficientes</h3>
+  <div class="eqwrap">$$\begin{aligned} \hat{b} &= S_{xy}/S_{xx} \\ \hat{a} &= \bar{y} - \hat{b}\,\bar{x} \\ S_{xx} &= \textstyle\sum (x_i-\bar{x})^2 \\ S_{xy} &= \textstyle\sum (x_i-\bar{x})(y_i-\bar{y}) \\ \hat{y}_0 &= \bar{y} + \hat{b}\,(x_0-\bar{x}) \;\;(\text{forma centroide}) \end{aligned}$$</div>
+
+  <h3>Dispersión residual (el motor de todo)</h3>
+  <div class="eqwrap">$$\begin{aligned} \text{SSE} &= \textstyle\sum (y_i-\hat{y}_i)^2 \\ s &= \sqrt{\text{SSE}/(n-2)} \\ S_{xx} &= (n-1)\,s_x^2 \end{aligned}$$</div>
+
+  <h3>Varianzas de los estimadores</h3>
+  <div class="eqwrap">$$\begin{aligned} \mathrm{Var}(\bar{y}) &= \sigma^2/n \\ \mathrm{Var}(\hat{b}) &= \sigma^2/S_{xx} \\ \mathrm{Var}(\hat{y}_0) &= \sigma^2\!\left[\textcolor{#1A7A5E}{\tfrac{1}{n}} + \textcolor{#993C1D}{\tfrac{(x_0-\bar{x})^2}{S_{xx}}}\right] \end{aligned}$$</div>
+
+  <h3>Errores estándar</h3>
+  <div class="eqwrap">$$\begin{aligned} \mathrm{SE}(\hat{y}_0) &= s\,\sqrt{\tfrac{1}{n} + \tfrac{(x_0-\bar{x})^2}{S_{xx}}} \\[3pt] \mathrm{SE}_{\text{pred}} &= s\,\sqrt{\textcolor{#C77D1A}{1} + \tfrac{1}{n} + \tfrac{(x_0-\bar{x})^2}{S_{xx}}} \end{aligned}$$</div>
+
+  <h3>Los intervalos</h3>
+  <div class="eqwrap">$$\begin{aligned} \text{CI}:\ &\hat{y}_0 \pm t\,s\,\sqrt{\tfrac{1}{n} + \tfrac{(x_0-\bar{x})^2}{S_{xx}}} \\[3pt] \text{PI}:\ &\hat{y}_0 \pm t\,s\,\sqrt{\textcolor{#C77D1A}{1} + \tfrac{1}{n} + \tfrac{(x_0-\bar{x})^2}{S_{xx}}} \\[3pt] b &= t\,s\,\sqrt{1 + \tfrac{1}{n} + \tfrac{(x_0-\bar{x})^2}{S_{xx}}} = \tfrac{\text{PI}_{\text{sup}}-\text{PI}_{\text{inf}}}{2} \end{aligned}$$</div>
+  <p class="eqnote">$t = t_{(0.975,\,n-2)}$ para 95% de dos colas.</p>
+
+  <h3>La descomposición que conecta CI y PI</h3>
+  <div class="eqwrap">$$\begin{aligned} y_{\text{nuevo}} - \hat{y}_0 &= \underbrace{(y_{\text{nuevo}}-\mu_0)}_{\textcolor{#993C1D}{\text{individuo}}} + \underbrace{(\mu_0-\hat{y}_0)}_{\textcolor{#2C6BAE}{\text{recta (CI)}}} \\[3pt] \mathrm{Var}(\text{PI}) &= \sigma^2 + \mathrm{Var}(\text{CI}) = \sigma^2\!\left[\textcolor{#C77D1A}{1} + \tfrac{1}{n} + \tfrac{(x_0-\bar{x})^2}{S_{xx}}\right] \end{aligned}$$</div>
+
+  <h3>Comportamiento y casos límite</h3>
+  <div class="eqwrap">$$\begin{aligned} \frac{\text{ancho}_{\text{PI}}}{\text{ancho}_{\text{CI}}}\Big|_{x=\bar{x}} &= \sqrt{n+1} \\[3pt] \text{PI} &\xrightarrow{\,n\to\infty\,} \hat{y}_0 \pm t\,s \\[3pt] \text{prom}\!\left[\tfrac{(x_i-\bar{x})^2}{S_{xx}}\right] = \tfrac{1}{n} &\;\Rightarrow\; \bar{b} \approx t\,s\,\sqrt{1+\tfrac{2}{n}} \end{aligned}$$</div>
+
+  <h3>Calidad del ajuste</h3>
+  <div class="eqwrap">$$\begin{aligned} \text{SST} &= \textstyle\sum (y_i-\bar{y})^2 \\ R^2 &= 1 - \text{SSE}/\text{SST} \\ \text{ancho del intervalo} &\;\propto\; s \;\;(\text{no } R^2) \end{aligned}$$</div>
+
+  <h3>Mejora del proceso (revalidación)</h3>
+  <div class="eqwrap">$$ F = s^2_{\text{nuevo}} \,/\, s^2_{\text{viejo}} $$</div>
+
+  <div class="callout note">
+    <span class="clabel">Una nota de notación</span>
+    <p>La <strong>b</strong> de la media-anchura del PI no es la <strong>b̂</strong> de la pendiente. Mismo símbolo, cosas distintas: la pendiente lleva sombrero (b̂) y la media-anchura no (b). El hilo que une todo el formulario: cada fórmula arranca de <strong>s</strong> (dispersión residual). El CI le suma la geometría de la recta (1/n + palanca); el PI le suma además el <strong>1</strong> del lente individual. Cambiar σ mueve s y escala todo; cambiar n o Sₓₓ solo toca los términos de la recta.</p>
+  </div>
 </section>
 
 </main>
