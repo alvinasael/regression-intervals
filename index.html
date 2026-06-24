@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intervalos de Confianza y Predicción · Calibración dry-to-wet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<style>
+:root{
+  --ink:#16324F;          /* navy ink - headings, sidebar */
+  --ink-soft:#3A5570;
+  --paper:#FFFFFF;        /* white background */
+  --surface:#FFFFFF;
+  --text:#23282D;
+  --text-soft:#5A6068;
+  --rule:#E4E0D6;
+  --ci:#2C6BAE;           /* confidence blue */
+  --pi:#C77D1A;           /* prediction amber/brass */
+  --truth:#1A7A5E;        /* verified green */
+  --coral:#993C1D;
+  --ci-soft:#E7F0F9;
+  --pi-soft:#FAF0DE;
+  --truth-soft:#E3F2EC;
+  --sbw:280px;
+  --maxw:780px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--text);
+  font-family:"Spectral",Georgia,serif;font-size:18px;line-height:1.72;
+  -webkit-font-smoothing:antialiased;
+}
+.layout{display:flex;align-items:flex-start}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  position:sticky;top:0;align-self:flex-start;
+  width:var(--sbw);min-width:var(--sbw);height:100vh;overflow-y:auto;
+  background:var(--ink);color:#D6E0EA;
+  padding:34px 26px 28px;
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+.sb-brand{font-family:"Fraunces",serif;color:#fff;font-weight:500;font-size:19px;line-height:1.3;letter-spacing:.1px}
+.sb-sub{color:#8FA6BC;font-size:12.5px;margin-top:6px;letter-spacing:.3px;text-transform:uppercase}
+.sb-rule{height:1px;background:#2C4A68;margin:22px 0 16px}
+.sb-nav{list-style:none;margin:0;padding:0;counter-reset:sec}
+.sb-nav li{margin:1px 0}
+.sb-nav a{
+  display:flex;gap:11px;align-items:baseline;
+  color:#B6C6D6;text-decoration:none;font-size:13.5px;line-height:1.35;
+  padding:7px 10px;border-radius:7px;border-left:2px solid transparent;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.sb-nav a .num{color:#6F8AA4;font-variant-numeric:tabular-nums;font-size:12px;min-width:18px}
+.sb-nav a:hover{background:#1E3D5A;color:#fff}
+.sb-nav a.active{background:#1E3D5A;color:#fff;border-left-color:var(--pi)}
+.sb-nav a.active .num{color:var(--pi)}
+.sb-key{margin-top:24px;font-size:12px;color:#8FA6BC}
+.sb-key .kt{text-transform:uppercase;letter-spacing:.6px;font-size:10.5px;color:#6F8AA4;margin-bottom:9px}
+.sb-key .kr{display:flex;align-items:center;gap:9px;margin:7px 0;color:#C6D4E2;font-size:12.5px}
+.sb-key .sw{width:22px;height:10px;border-radius:2px;flex:none}
+
+/* ---------- Content ---------- */
+.content{flex:1;min-width:0;padding:0 6vw 120px;max-width:calc(var(--maxw) + 12vw)}
+.doc-header{padding:74px 0 30px;border-bottom:2px solid var(--ink);margin-bottom:8px}
+.eyebrow{font-family:system-ui,sans-serif;text-transform:uppercase;letter-spacing:2.4px;font-size:12px;color:var(--pi);font-weight:600}
+h1{font-family:"Fraunces",serif;font-weight:500;font-size:40px;line-height:1.13;color:var(--ink);margin:16px 0 14px;letter-spacing:-.3px}
+.lede{font-size:19px;color:var(--text-soft);max-width:60ch;margin:0}
+.meta{font-family:system-ui,sans-serif;font-size:12.5px;color:var(--text-soft);margin-top:22px;letter-spacing:.3px}
+
+section{padding:48px 0 8px;scroll-margin-top:20px;border-top:1px solid var(--rule)}
+section:first-of-type{border-top:none}
+.sec-num{font-family:system-ui,sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;color:var(--pi)}
+h2{font-family:"Fraunces",serif;font-weight:500;font-size:28px;line-height:1.18;color:var(--ink);margin:6px 0 18px;letter-spacing:-.2px}
+h3{font-family:"Fraunces",serif;font-weight:500;font-size:20px;color:var(--ink);margin:30px 0 8px}
+p{margin:0 0 17px;max-width:68ch}
+.content a{color:var(--ci);text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:.5px}
+strong{font-weight:600;color:var(--ink)}
+em.term{font-style:normal;font-weight:600;color:var(--ink)}
+
+/* color spans */
+.cci{color:var(--ci);font-weight:600}
+.cpi{color:var(--pi);font-weight:600}
+.ctr{color:var(--truth);font-weight:600}
+.cco{color:var(--coral);font-weight:600}
+
+/* ---------- Callouts ---------- */
+.callout{border-radius:10px;padding:18px 22px;margin:24px 0;font-size:16.5px;line-height:1.66}
+.callout p{max-width:none;margin:0 0 10px}
+.callout p:last-child{margin-bottom:0}
+.callout .clabel{font-family:system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;display:block;margin-bottom:8px}
+.analogy{background:var(--pi-soft);border-left:3px solid var(--pi)}
+.analogy .clabel{color:#8A560F}
+.keyeq{background:var(--surface);border:1px solid var(--rule);border-top:3px solid var(--ink)}
+.keyeq .clabel{color:var(--ink-soft)}
+.note{background:#F4F2EC;border-left:3px solid var(--text-soft)}
+.note .clabel{color:var(--text-soft)}
+.caution{background:#FBEFE9;border-left:3px solid var(--coral)}
+.caution .clabel{color:var(--coral)}
+
+/* ---------- Equations ---------- */
+.eqwrap{margin:22px 0;text-align:center;overflow-x:auto;overflow-y:hidden}
+.katex-display{margin:.4em 0}
+.eqnote{font-family:system-ui,sans-serif;font-size:13.5px;color:var(--text-soft);text-align:center;margin-top:4px}
+
+/* ---------- Figures ---------- */
+figure{margin:30px 0;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:20px 20px 8px}
+.fig-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;font-family:system-ui,sans-serif}
+.fig-tag{font-size:11.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--pi)}
+.fig-title{font-size:13.5px;color:var(--ink);font-weight:600}
+.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-family:system-ui,sans-serif;font-size:13.5px;color:var(--text-soft);margin:6px 2px 14px}
+.controls input[type=range]{flex:1;min-width:130px;accent-color:var(--ci)}
+.controls .val{font-weight:600;color:var(--ink);min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.chartbox{position:relative;width:100%;height:330px}
+figcaption{font-family:system-ui,sans-serif;font-size:13px;line-height:1.55;color:var(--text-soft);padding:12px 2px 8px;border-top:1px solid var(--rule);margin-top:8px}
+figcaption b{color:var(--ink);font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:11px;margin:4px 2px 10px}
+.card{background:#F6F5F1;border:1px solid var(--rule);border-radius:9px;padding:11px 13px;font-family:system-ui,sans-serif}
+.card .ck{font-size:11.5px;color:var(--text-soft);line-height:1.3}
+.card .cv{font-size:21px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:2px}
+.legendrow{display:flex;flex-wrap:wrap;gap:15px;font-family:system-ui,sans-serif;font-size:12.5px;color:var(--text-soft);margin:2px 2px 10px}
+.legendrow span{display:flex;align-items:center;gap:6px}
+.legendrow .sw{width:15px;height:10px;border-radius:2px}
+.legendrow .swl{width:16px;height:0;border-top-width:2px;border-top-style:solid}
+
+/* ---------- Table ---------- */
+.tbl{width:100%;border-collapse:collapse;font-family:system-ui,sans-serif;font-size:14.5px;margin:18px 0}
+.tbl th,.tbl td{padding:9px 14px;text-align:right;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl thead th{color:var(--ink);font-weight:600;border-bottom:1.5px solid var(--ink)}
+.tbl tbody tr:last-child td{font-weight:600;color:var(--ink)}
+
+/* ---------- SVG figure ---------- */
+.svgbox{display:flex;justify-content:center;padding:6px 0 2px}
+.svgbox svg{max-width:560px;width:100%;height:auto}
+
+/* ---------- Executive summary ---------- */
+.exec-panel{background:#F8FAFC;border:1px solid var(--rule);border-top:3px solid var(--ink);border-radius:12px;padding:6px 26px 18px;margin-top:18px}
+.exec-intro{font-family:system-ui,sans-serif;font-size:15px;color:var(--text-soft);margin:16px 0 4px;max-width:62ch;line-height:1.6}
+.tk{display:grid;grid-template-columns:30px 1fr auto;gap:6px 14px;align-items:baseline;padding:14px 0;border-top:1px solid var(--rule)}
+.tk:first-of-type{border-top:none}
+.tk .tn{font-family:system-ui,sans-serif;font-size:13px;font-weight:700;color:var(--pi);font-variant-numeric:tabular-nums}
+.tk .tx{font-size:16px;line-height:1.55}
+.tk .tx b{color:var(--ink);font-weight:600}
+.tk .tref{justify-self:end;align-self:center;font-family:system-ui,sans-serif;font-size:12px;font-weight:600;color:var(--ci);text-decoration:none;border:1px solid #CBDAEA;background:#fff;border-radius:20px;padding:3px 11px;white-space:nowrap;transition:background .15s,color .15s}
+.tk .tref:hover{background:var(--ci);color:#fff;border-color:var(--ci)}
+@media(max-width:560px){.tk{grid-template-columns:26px 1fr}.tk .tref{grid-column:2;justify-self:start;margin-top:5px}}
+
+/* ---------- Responsive ---------- */
+.menubtn{display:none}
+@media(max-width:920px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .25s;z-index:40;box-shadow:0 0 40px rgba(0,0,0,.3)}
+  .sidebar.open{transform:translateX(0)}
+  .content{padding:0 28px 100px;max-width:none}
+  .menubtn{display:flex;align-items:center;gap:8px;position:fixed;top:14px;right:14px;z-index:50;
+    background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-family:system-ui,sans-serif;font-size:13px;cursor:pointer}
+  h1{font-size:32px}
+  body{font-size:17px}
+}
+</style>
+</head>
+<body>
+<button class="menubtn" onclick="document.querySelector('.sidebar').classList.toggle('open')">Secciones</button>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="sb-brand">Intervalos de confianza<br>y de predicción</div>
+  <div class="sb-sub">Calibración dry-to-wet</div>
+  <div class="sb-rule"></div>
+  <nav>
+    <ul class="sb-nav">
+      <li><a href="#resumen"><span class="num">—</span><span>Resumen ejecutivo</span></a></li>
+      <li><a href="#s0"><span class="num">00</span><span>El problema de calibración</span></a></li>
+      <li><a href="#s1"><span class="num">01</span><span>La recta es una estimación</span></a></li>
+      <li><a href="#s2"><span class="num">02</span><span>La recta tiembla</span></a></li>
+      <li><a href="#s3"><span class="num">03</span><span>Dos preguntas, dos intervalos</span></a></li>
+      <li><a href="#s4"><span class="num">04</span><span>¿Qué es "la media"?</span></a></li>
+      <li><a href="#s5"><span class="num">05</span><span>El intervalo de confianza</span></a></li>
+      <li><a href="#s6"><span class="num">06</span><span>De dónde sale la fórmula</span></a></li>
+      <li><a href="#s7"><span class="num">07</span><span>El intervalo de predicción</span></a></li>
+      <li><a href="#s8"><span class="num">08</span><span>La descomposición del error</span></a></li>
+      <li><a href="#s9"><span class="num">09</span><span>De dónde sale σ</span></a></li>
+      <li><a href="#s10"><span class="num">10</span><span>R² frente a s</span></a></li>
+      <li><a href="#s11"><span class="num">11</span><span>Cómo mejorar el PI</span></a></li>
+      <li><a href="#s12"><span class="num">12</span><span>Síntesis operativa</span></a></li>
+    </ul>
+  </nav>
+  <div class="sb-key">
+    <div class="kt">Código de color</div>
+    <div class="kr"><span class="sw" style="background:#2C6BAE"></span>CI · la recta verdadera</div>
+    <div class="kr"><span class="sw" style="background:#C77D1A"></span>PI · un lente individual</div>
+    <div class="kr"><span class="sw" style="background:#1A7A5E"></span>la recta / la verdad</div>
+  </div>
+</aside>
+
+<main class="content">
+
+<header class="doc-header">
+  <div class="eyebrow">Guía conceptual · Ingeniería de calidad</div>
+  <h1>De la recta a la pieza:<br>confianza y predicción en regresión</h1>
+  <p class="lede">Cómo leer, derivar y usar los intervalos que tu software de calibración entrega para cada valor de dry — y por qué el CI gobierna el centrado del proceso mientras el PI gobierna la conformidad pieza a pieza.</p>
+  <div class="meta">Aplicado al flujo dry-to-wet power · Construido concepto sobre concepto, con las ecuaciones explicadas desde su origen</div>
+</header>
+
+<section id="resumen">
+  <div class="sec-num">Para quien tiene prisa</div>
+  <h2>Resumen ejecutivo</h2>
+  <div class="exec-panel">
+    <p class="exec-intro">Los puntos que hay que entender, en orden. Cada uno enlaza a la sección donde se explica y se ilustra. Si solo lees esto, tienes el mapa completo.</p>
+
+    <div class="tk"><div class="tn">01</div><div class="tx"><b>La recta es una estimación, no la verdad.</b> Salió de una muestra finita; otra corrida de calibración daría otra recta. Todo lo demás nace de aquí.</div><a class="tref" href="#s1">§01–02</a></div>
+
+    <div class="tk"><div class="tn">02</div><div class="tx"><b>Dos preguntas, dos intervalos.</b> El <span class="cci">CI</span> pregunta dónde está la recta verdadera; el <span class="cpi">PI</span>, dónde cae un lente individual.</div><a class="tref" href="#s3">§03</a></div>
+
+    <div class="tk"><div class="tn">03</div><div class="tx"><b>"La media" es condicional.</b> Es el wet promedio a un dry fijo — un corte vertical — no el promedio global de los datos. El x₀ selecciona el grupo, no es un promedio.</div><a class="tref" href="#s4">§04</a></div>
+
+    <div class="tk"><div class="tn">04</div><div class="tx"><b>El CI va contra la recta, no contra un punto nuevo.</b> El x₀ solo ubica la pregunta y gradúa el ancho; lo que el CI afirma es la altura verdadera de la recta ahí.</div><a class="tref" href="#s5">§05</a></div>
+
+    <div class="tk"><div class="tn">05</div><div class="tx"><b>La fórmula del CI tiene dos temblores.</b> Altura de la recta (1/n) + error de pendiente × brazo² ((x₀−x̄)²/Sₓₓ). Por eso es angosto en x̄ y se abre en los extremos.</div><a class="tref" href="#s6">§06</a></div>
+
+    <div class="tk"><div class="tn">06</div><div class="tx"><b>El PI = CI + dispersión individual.</b> Ese "1" extra del radical es la varianza de un lente (σ²); por eso el PI siempre contiene al CI y nunca colapsa sobre la recta.</div><a class="tref" href="#s7">§07–08</a></div>
+
+    <div class="tk"><div class="tn">07</div><div class="tx"><b>σ sale de los residuos</b> (s = √(SSE/(n−2))) y es propiedad del proceso, no de los datos. Un solo s vale en todo el rango solo si la varianza es constante (homocedasticidad).</div><a class="tref" href="#s9">§09</a></div>
+
+    <div class="tk"><div class="tn">08</div><div class="tx"><b>R² no escala el PI; s sí.</b> R² es relativo y sensible al rango de dry — puede ser altísimo con un PI demasiado ancho. Para conformidad, mira s (S·y·x).</div><a class="tref" href="#s10">§10</a></div>
+
+    <div class="tk"><div class="tn">09</div><div class="tx"><b>Mejorar el PI no es juntar datos.</b> El CI se desinfla con n, pero el PI tiene piso = σ. Solo reducir la variabilidad del proceso mismo lo estrecha.</div><a class="tref" href="#s11">§11</a></div>
+
+    <div class="tk"><div class="tn">10</div><div class="tx"><b>Uso operativo.</b> <span class="cci">CI</span> → centrado del proceso. <span class="cpi">PI</span> (PLIM/PLIM_1) → conformidad pieza a pieza. Estrechar el PI → reducir σ, no juntar datos.</div><a class="tref" href="#s12">§12</a></div>
+  </div>
+</section>
+
+<section id="s0">
+  <div class="sec-num">00</div>
+  <h2>El problema de calibración</h2>
+  <p>Mides la potencia de un lente en seco (<em class="term">dry</em>) y necesitas saber qué potencia tendrá en húmedo (<em class="term">wet</em>), que es como finalmente se usa. Ajustas una recta de regresión sobre pares (dry, wet) y, de ahí en adelante, a cada dry que midas le pides al modelo su wet predicho. El software, además del valor predicho, te devuelve dos intervalos en cada punto: un <span class="cci">CI</span> y un <span class="cpi">PI</span>. Ambos están centrados en el mismo valor, pero responden a preguntas distintas, y confundirlos lleva a decisiones equivocadas.</p>
+  <p>Este documento construye la diferencia desde el principio, sin saltos. La meta, al final, es que tres cosas queden firmes: qué mide <strong>R²</strong>, qué es el <strong>CI</strong>, qué es el <strong>PI</strong>, y por qué <strong>mejorar el PI no es cuestión de juntar más datos</strong> sino de tocar el proceso.</p>
+  <div class="callout analogy">
+    <span class="clabel">El punto de partida: el CI que ya conoces</span>
+    <p>Cuando estimas una sola cantidad a partir de una muestra —digamos el promedio de una medición repetida— tu software te da un intervalo de confianza alrededor de ese promedio. ¿Por qué? Porque con otra muestra el valor se correría un poco, y el CI mide cuánto. <strong>La recta de regresión es esa misma idea, repetida en cada dry.</strong> <span class="cci">ŷ(x₀)</span> es una estimación puntual del wet promedio verdadero a ese dry, y su CI es —literalmente— el intervalo de confianza de esa estimación puntual. La <span class="cci">banda CI</span> completa no es más que esos intervalos puntuales ensartados a lo largo del rango.</p>
+    <p>Esa es la analogía que conviene tener presente: el CI de la recta no es un objeto nuevo, es el CI de una estimación puntual —el que ya conoces— evaluado en cada x. Todo lo que sigue explica por qué ese intervalo cambia de ancho de un punto a otro, y qué le falta para hablar de un lente individual, que es el trabajo del <span class="cpi">PI</span>.</p>
+  </div>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 01</span><span class="fig-title">Un CI puntual, repetido en cada dry, es la banda de confianza</span></div>
+    <div class="svgbox"><svg viewBox="0 0 680 310" role="img" aria-label="A la izquierda el intervalo de confianza de una estimación puntual; a la derecha la recta de regresión con un intervalo igual en cada x, cuya unión forma la banda de confianza.">
+  <text x="135" y="56" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12.5" font-weight="600" fill="#16324F">Lo que ya conoces</text>
+  <text x="475" y="56" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12.5" font-weight="600" fill="#16324F">La recta de regresión</text>
+
+  
+  <line x1="135" y1="106" x2="135" y2="194" stroke="#2C6BAE" stroke-width="3.4" stroke-linecap="round"/>
+  <line x1="127" y1="106" x2="143" y2="106" stroke="#2C6BAE" stroke-width="3.4"/>
+  <line x1="127" y1="194" x2="143" y2="194" stroke="#2C6BAE" stroke-width="3.4"/>
+  <circle cx="135" cy="150" r="5.5" fill="#23282D"/>
+  <text x="135" y="218" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#23282D">ŷ — una estimación puntual</text>
+  <text x="135" y="235" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#2C6BAE">y su intervalo de confianza</text>
+
+  <text x="249" y="118" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11.5" fill="#5A6068">repetir en</text>
+  <text x="249" y="133" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11.5" fill="#5A6068">cada x</text>
+  <line x1="206" y1="150" x2="286" y2="150" stroke="#5A6068" stroke-width="1.4"/>
+  <path d="M 286,150 l -8,-4 l 0,8 Z" fill="#5A6068"/>
+
+  <path d="M 300.0,209.0 L 323.3,202.7 L 346.7,195.9 L 370.0,188.6 L 393.3,180.7 L 416.7,172.3 L 440.0,163.4 L 463.3,153.9 L 486.7,143.9 L 510.0,133.4 L 533.3,122.3 L 556.7,110.7 L 580.0,98.6 L 603.3,85.9 L 626.7,72.7 L 650.0,59.0 L 650.0,111.0 L 626.7,117.3 L 603.3,124.1 L 580.0,131.4 L 556.7,139.3 L 533.3,147.7 L 510.0,156.6 L 486.7,166.1 L 463.3,176.1 L 440.0,186.6 L 416.7,197.7 L 393.3,209.3 L 370.0,221.4 L 346.7,234.1 L 323.3,247.3 L 300.0,261.0 Z" fill="rgba(44,107,174,0.13)" stroke="none"/>
+  <line x1="300" y1="235" x2="650" y2="85" stroke="#23282D" stroke-width="2"/>
+  <path d="M 147,150 C 230,150 360,160.0 464,160.0" fill="none" stroke="#2C6BAE" stroke-width="1.2" stroke-dasharray="4 4" opacity="0.5"/>
+  <line x1="322" y1="203.1" x2="322" y2="248.0" stroke="#2C6BAE" stroke-width="2.4" stroke-linecap="round"/><line x1="317" y1="203.1" x2="327" y2="203.1" stroke="#2C6BAE" stroke-width="2.4"/><line x1="317" y1="248.0" x2="327" y2="248.0" stroke="#2C6BAE" stroke-width="2.4"/><circle cx="322" cy="225.6" r="3" fill="#23282D"/><line x1="398" y1="179.1" x2="398" y2="206.9" stroke="#2C6BAE" stroke-width="2.4" stroke-linecap="round"/><line x1="393" y1="179.1" x2="403" y2="179.1" stroke="#2C6BAE" stroke-width="2.4"/><line x1="393" y1="206.9" x2="403" y2="206.9" stroke="#2C6BAE" stroke-width="2.4"/><circle cx="398" cy="193.0" r="3" fill="#23282D"/><line x1="475" y1="149.0" x2="475" y2="171.0" stroke="#2C6BAE" stroke-width="3" stroke-linecap="round"/><line x1="470" y1="149.0" x2="480" y2="149.0" stroke="#2C6BAE" stroke-width="3"/><line x1="470" y1="171.0" x2="480" y2="171.0" stroke="#2C6BAE" stroke-width="3"/><circle cx="475" cy="160.0" r="4.5" fill="#23282D"/><circle cx="475" cy="160.0" r="9" fill="none" stroke="#2C6BAE" stroke-width="1.3" opacity="0.6"/><line x1="552" y1="113.1" x2="552" y2="140.9" stroke="#2C6BAE" stroke-width="2.4" stroke-linecap="round"/><line x1="547" y1="113.1" x2="557" y2="113.1" stroke="#2C6BAE" stroke-width="2.4"/><line x1="547" y1="140.9" x2="557" y2="140.9" stroke="#2C6BAE" stroke-width="2.4"/><circle cx="552" cy="127.0" r="3" fill="#23282D"/><line x1="628" y1="72.0" x2="628" y2="116.9" stroke="#2C6BAE" stroke-width="2.4" stroke-linecap="round"/><line x1="623" y1="72.0" x2="633" y2="72.0" stroke="#2C6BAE" stroke-width="2.4"/><line x1="623" y1="116.9" x2="633" y2="116.9" stroke="#2C6BAE" stroke-width="2.4"/><circle cx="628" cy="94.4" r="3" fill="#23282D"/>
+  <text x="640" y="270" text-anchor="end" font-family="system-ui,sans-serif" font-size="11.5" fill="#5A6068">dry →</text>
+  <text x="475" y="293" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#2C6BAE">la banda CI = un intervalo por cada x</text>
+</svg></div>
+    <figcaption>A la izquierda, el intervalo de confianza de una sola estimación puntual — lo que ya conoces. A la derecha, la recta hace exactamente lo mismo en cada dry: cada x tiene su estimación <b>ŷ(x)</b> con su propio CI, y la <b>banda azul</b> no es más que todos esos intervalos puntuales juntos. El cuello en el centro y la apertura en los extremos vienen de que esos intervalos no miden todos lo mismo (se explica en las secciones 05–06).</figcaption>
+  </figure>
+</section>
+
+<section id="s1">
+  <div class="sec-num">01</div>
+  <h2>La recta es una estimación, no una verdad</h2>
+  <p>El primer ladrillo: la ecuación que usas no es la verdad del proceso, es una conjetura calculada a partir de tu muestra. La escribimos así:</p>
+  <div class="eqwrap">$$ \hat{y} = \hat{a} + \hat{b}\,x $$</div>
+  <p>El sombrero (<em class="term">hat</em>) sobre cada símbolo es deliberado: marca "estimado a partir de datos". Hay una recta verdadera del proceso, que llamamos con letras griegas,</p>
+  <div class="eqwrap">$$ \mu(x) = \alpha + \beta\,x $$</div>
+  <p>donde <span class="ctr">μ(x)</span> es la potencia wet <em>promedio verdadera</em> a un dry dado, y α, β son la intersección y pendiente reales del proceso. Tú no los conoces. Lo que tienes es <span class="cci">ŷ</span>, que estima a <span class="ctr">μ(x)</span>, con â y b̂ estimando a α y β.</p>
+  <p>La consecuencia es la semilla de todo el documento: como â y b̂ salieron de una muestra finita, si repitieras la corrida de calibración con otro grupo de lentes obtendrías valores un poco distintos — otra recta. Tu recta no es <em>la</em> recta; es <em>una</em> recta, sacada del sombrero de tu muestra particular.</p>
+  <div class="callout note">
+    <span class="clabel">Por qué importa</span>
+    <p>Si la recta fuera la verdad exacta, no haría falta ningún intervalo: meterías x, saldría el wet correcto y listo. Los intervalos existen precisamente porque la recta es incierta (eso lo cuantifica el CI) y porque, aun conociendo la recta exacta, los lentes individuales se dispersan a su alrededor (eso lo agrega el PI). Las dos fuentes de incertidumbre son los dos personajes de esta historia.</p>
+  </div>
+</section>
+
+<section id="s2">
+  <div class="sec-num">02</div>
+  <h2>La recta tiembla: el abanico de rectas posibles</h2>
+  <p>Para <em>ver</em> que tu recta es incierta, imaginá repetir el experimento muchas veces: la misma máquina, los mismos lentes, pero otro grupo de mediciones cada vez. Cada repetición te da otra â y otra b̂, es decir, otra recta. La figura siguiente superpone esas rectas: cada línea coral es un "universo paralelo" del mismo proceso.</p>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 02</span><span class="fig-title">El temblor de la recta forma la banda de confianza</span></div>
+    <div class="controls">
+      <label style="min-width:200px">Muestras alternativas (universos paralelos)</label>
+      <input type="range" id="f2k" min="1" max="80" value="30" step="1">
+      <span class="val" id="f2kv">30</span>
+    </div>
+    <div class="legendrow">
+      <span><span class="swl" style="border-top-color:#1A7A5E;border-top-style:dashed"></span>recta verdadera</span>
+      <span><span class="swl" style="border-top-color:#23282D"></span>tu recta</span>
+      <span><span class="swl" style="border-top-color:#D85A30"></span>rectas de otras muestras</span>
+      <span><span class="sw" style="background:rgba(44,107,174,.25)"></span>banda CI</span>
+    </div>
+    <div class="chartbox"><canvas id="f2"></canvas></div>
+    <figcaption>Mueves el control y aparecen más rectas. Todas se cruzan en un cuello apretado cerca de <b>x̄</b> (el centroide de tus dry) y se abren como abanico hacia los extremos. Ese abanico <b>es</b> la banda de confianza: el error en la pendiente hace que la recta <i>pivotee</i> alrededor del centroide, casi sin moverse en el centro y mucho en las orillas.</figcaption>
+  </figure>
+
+  <p>Dos lecturas que conviene fijar desde ya. Primero: la recta negra es la única que tu software te muestra (la de tu muestra real); la verdadera (verde punteada) está adentro del abanico, pero no sabes exactamente dónde. Segundo: ese <em>cuello</em> en x̄ no es casualidad — la recta siempre pasa por el punto (x̄, ȳ), así que ahí solo puede subir o bajar un poco, no inclinarse. Esa geometría reaparecerá, ya con álgebra, en la sección 06.</p>
+  <div class="callout analogy">
+    <span class="clabel">Analogía</span>
+    <p>Es como sostener una regla apoyada en un solo dedo puesto en el centroide. La puedes levantar o bajar un poquito (incertidumbre de altura) y la puedes ladear (incertidumbre de pendiente). Cerca del dedo, ladearla casi no cambia la altura; en las puntas, el mismo ladeo se amplifica muchísimo. Por eso el abanico es angosto al medio y ancho en los extremos.</p>
+  </div>
+</section>
+
+<section id="s3">
+  <div class="sec-num">03</div>
+  <h2>Dos preguntas, dos intervalos</h2>
+  <p>Una vez aceptas que la recta tiembla y que, además, los lentes individuales se dispersan, surgen dos preguntas completamente distintas que puedes hacer en un mismo dry:</p>
+  <p><span class="cci">Pregunta del CI</span> — "¿dónde está la <em>recta verdadera</em> en este dry?" Es decir, ¿cuál es el wet <em>promedio</em> de todos los lentes a ese dry? El CI solo incorpora la incertidumbre de la recta (el abanico de la figura anterior).</p>
+  <p><span class="cpi">Pregunta del PI</span> — "¿dónde caerá un <em>lente individual nuevo</em> medido a este dry?" El PI incorpora dos cosas: la misma incertidumbre de la recta <em>más</em> la dispersión natural de un lente alrededor de ella.</p>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 03</span><span class="fig-title">CI estrecho, PI ancho — y qué pasa al crecer n</span></div>
+    <div class="controls">
+      <label style="min-width:120px">Tamaño de muestra n</label>
+      <input type="range" id="f3n" min="6" max="200" value="15" step="1">
+      <span class="val" id="f3nv">15</span>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ck">Ancho PI / ancho CI (en x̄)</div><div class="cv" id="f3ratio">—</div></div>
+      <div class="card"><div class="ck">Puntos dentro del <span class="cci">CI</span></div><div class="cv" id="f3ci">—</div></div>
+      <div class="card"><div class="ck">Puntos dentro del <span class="cpi">PI</span></div><div class="cv" id="f3pi">—</div></div>
+    </div>
+    <div class="legendrow">
+      <span><span class="sw" style="background:rgba(199,125,26,.28)"></span>banda PI</span>
+      <span><span class="sw" style="background:rgba(44,107,174,.40)"></span>banda CI</span>
+      <span><span class="swl" style="border-top-color:#23282D"></span>recta ŷ</span>
+    </div>
+    <div class="chartbox"><canvas id="f3"></canvas></div>
+    <figcaption>Sube n y mira los contadores. El <b>CI</b> se desinfla hacia la recta (casi ningún punto individual cae en él — no es su trabajo contenerlos). El <b>PI</b> casi no se mueve y retiene cerca del 95% de los puntos. La razón ancho-PI/ancho-CI crece como √(n+1): no porque el PI engorde, sino porque el CI se desinfla.</figcaption>
+  </figure>
+
+  <p>El ejemplo de los contadores es la prueba operacional de toda la distinción: el CI <em>no</em> sirve para juzgar piezas individuales, porque está diseñado para ser estrecho y casi nadie cae adentro. Las piezas viven dentro del PI. Guarda esta imagen; volveremos a ella al hablar de conformidad.</p>
+</section>
+
+<section id="s4">
+  <div class="sec-num">04</div>
+  <h2>¿Qué es "la media"? La rebanada vertical</h2>
+  <p>Acá se aclara una confusión habitual. Cuando decimos que el CI habla del wet <em>promedio</em>, no es el promedio de la nube entera ni algo que sale de variar el dry. Es un promedio <strong>condicional</strong>, en un dry fijo:</p>
+  <div class="eqwrap">$$ \mu(x_0) = \mathbb{E}[\,Y \mid X = x_0\,] $$</div>
+  <p>Se lee: si fabricaras infinitos lentes <em>todos</em> con el mismo dry = x₀ y midieras su wet, el promedio de esos wet es <span class="ctr">μ(x₀)</span>. Es un corte <strong>vertical</strong> en un solo X, no algo horizontal a lo ancho de los X. Por eso hay una media verdadera — y por tanto un CI — en cada x₀.</p>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 04</span><span class="fig-title">Cada dry define un grupo; su promedio cae sobre la recta</span></div>
+    <div class="controls">
+      <label style="min-width:160px">x₀ — un dry específico</label>
+      <input type="range" id="f4x" min="1.5" max="9.5" value="6" step="0.1">
+      <span class="val" id="f4xv">6.0</span>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ck">El grupo</div><div class="cv" style="font-size:15px">lentes con dry = <span id="f4g">6.0</span></div></div>
+      <div class="card"><div class="ck">ŷ = wet promedio del grupo</div><div class="cv" id="f4y">—</div></div>
+      <div class="card"><div class="ck"><span class="cci">CI</span> de ese promedio</div><div class="cv" style="font-size:15px" id="f4ci">—</div></div>
+    </div>
+    <div class="chartbox"><canvas id="f4"></canvas></div>
+    <figcaption>La columna verde son los lentes que comparten ese dry. Su <b>promedio de wet</b> es el punto sobre la recta; el bracket azul (CI) marca dónde está ese promedio <i>verdadero</i>. Desliza x₀: el promedio siempre cae sobre la recta, y el CI se aprieta cerca de x̄ y se abre en los extremos. El x₀ no es un promedio — es el <b>selector</b> del grupo cuyo wet promedio estimas.</figcaption>
+  </figure>
+
+  <div class="callout note">
+    <span class="clabel">El caso especial que confunde</span>
+    <p>La recta siempre pasa por (x̄, ȳ). Así que <em>solo</em> si pasas x₀ = x̄, entonces ŷ coincide con ȳ, el promedio global de tus wet medidos. Para cualquier otro x₀, ŷ(x₀) es el promedio de un grupo distinto y no coincide con tu promedio global. De ahí viene la intuición errónea de que "el x₀ representa el promedio": solo es cierto en el centroide.</p>
+  </div>
+</section>
+
+<section id="s5">
+  <div class="sec-num">05</div>
+  <h2>El intervalo de confianza: qué mide exactamente</h2>
+  <p>El CI va contra la <strong>recta</strong>, no contra un punto nuevo. El x₀ que pasas cumple dos roles, pero ninguno es "ser un punto a predecir": primero <em>ubica</em> la pregunta (posición horizontal), y segundo <em>fija el ancho</em> del intervalo (por la distancia a x̄). Lo que el CI <em>afirma</em> es sobre la altura de la recta verdadera <span class="ctr">μ(x₀)</span> en ese punto.</p>
+  <p>El que va contra "un punto nuevo" es el PI. Esa es la frontera exacta:</p>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 05</span><span class="fig-title">Un solo x₀: el CI mide la recta, el PI mide un lente nuevo</span></div>
+    <div class="controls">
+      <label style="min-width:150px">x₀ que le pasas</label>
+      <input type="range" id="f5x" min="1" max="10" value="8" step="0.1">
+      <span class="val" id="f5xv">8.0</span>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ck">ŷ en x₀ (la recta)</div><div class="cv" id="f5y">—</div></div>
+      <div class="card"><div class="ck" style="color:#2C6BAE">CI — la recta verdadera</div><div class="cv" style="font-size:16px" id="f5ci">—</div></div>
+      <div class="card"><div class="ck" style="color:#C77D1A">PI — un lente nuevo</div><div class="cv" style="font-size:16px" id="f5pi">—</div></div>
+    </div>
+    <div class="chartbox"><canvas id="f5"></canvas></div>
+    <figcaption>Los dos brackets cuelgan del mismo punto — ŷ(x₀), la recta evaluada ahí. El <b>azul (CI)</b> es corto: el rango de la altura verdadera de la recta. El <b>ámbar (PI)</b> es largo: dónde caería un lente nuevo. Mismo centro, distinto blanco. Hacia los extremos los dos se alargan; cerca de x̄ el azul casi se cierra, pero el ámbar nunca colapsa.</figcaption>
+  </figure>
+
+  <div class="callout keyeq">
+    <span class="clabel">Las dos fórmulas, lado a lado</span>
+    <div class="eqwrap">$$ \text{CI}:\ \hat{y}_0 \pm t\, s\,\sqrt{\tfrac{1}{n} + \tfrac{(x_0-\bar{x})^2}{S_{xx}}} $$</div>
+    <div class="eqwrap">$$ \text{PI}:\ \hat{y}_0 \pm t\, s\,\sqrt{\textcolor{#C77D1A}{1} + \tfrac{1}{n} + \tfrac{(x_0-\bar{x})^2}{S_{xx}}} $$</div>
+    <p class="eqnote">El único término que cambia es ese <span class="cpi">1</span> dentro del radical del PI. Todo lo demás es idéntico. Las próximas dos secciones derivan de dónde sale cada pedazo.</p>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="sec-num">06</div>
+  <h2>De dónde sale la fórmula del CI</h2>
+  <p>Toda la incertidumbre del CI es <strong>Var(ŷ₀)</strong>: cuánto puede bambolearse tu recta estimada respecto a la verdadera en x₀. Derivémosla.</p>
+
+  <h3>Paso 1 · Anclar en el centroide</h3>
+  <p>En vez de escribir la recta con â y b̂ (que están <em>correlacionados</em> y ensucian el álgebra), la anclamos en (x̄, ȳ). Como â = ȳ − b̂·x̄:</p>
+  <div class="eqwrap">$$ \hat{y}_0 = \hat{a} + \hat{b}\,x_0 = \bar{y} + \hat{b}\,(x_0 - \bar{x}) $$</div>
+  <p>La gracia es que ȳ y b̂ <strong>sí son independientes</strong> (Cov(ȳ, b̂) = 0). Entonces la varianza de la suma es la suma de varianzas, sin término cruzado:</p>
+  <div class="eqwrap">$$ \mathrm{Var}(\hat{y}_0) = \mathrm{Var}(\bar{y}) + (x_0-\bar{x})^2\,\mathrm{Var}(\hat{b}) $$</div>
+
+  <h3>Paso 2 · Las dos piezas</h3>
+  <p>Cada varianza tiene forma conocida. La de ȳ es la de un promedio de n datos; la de la pendiente lleva Sₓₓ = Σ(xᵢ − x̄)² en el denominador:</p>
+  <div class="eqwrap">$$ \mathrm{Var}(\bar{y}) = \frac{\sigma^2}{n}\,,\qquad \mathrm{Var}(\hat{b}) = \frac{\sigma^2}{S_{xx}} $$</div>
+  <p>Sustituyendo, y como (x₀ − x̄) es una constante (el <em>brazo de palanca</em>):</p>
+  <div class="eqwrap">$$ \mathrm{Var}(\hat{y}_0) = \sigma^2\!\left[\,\textcolor{#1A7A5E}{\tfrac{1}{n}} + \textcolor{#993C1D}{\tfrac{(x_0-\bar{x})^2}{S_{xx}}}\,\right] $$</div>
+  <p>Reemplazas σ² por su estimador s², sacas raíz para el error estándar y multiplicas por t (porque usaste s, no σ, con n−2 grados de libertad). Ahí aparece tu fórmula completa del CI. Cada término es un tipo de temblor:</p>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 06</span><span class="fig-title">La fórmula desarmada en sus dos varianzas</span></div>
+    <div class="controls">
+      <label style="min-width:60px">x₀</label>
+      <input type="range" id="f6x" min="1.5" max="9.5" value="8" step="0.1">
+      <span class="val" id="f6xv">8.0</span>
+    </div>
+    <div class="chartbox" style="height:250px"><canvas id="f6"></canvas></div>
+    <div style="font-family:system-ui,sans-serif;font-size:12.5px;color:#5A6068;margin:14px 2px 6px">Var(ŷ₀) = s²·[ 1/n + (x₀−x̄)²/Sₓₓ ] — composición a este x₀</div>
+    <div style="display:flex;height:28px;width:100%;border-radius:8px;overflow:hidden;background:#F1EFE8;margin-bottom:6px">
+      <div id="f6A" style="background:rgba(26,122,94,.55)"></div>
+      <div id="f6B" style="background:rgba(153,60,29,.55)"></div>
+    </div>
+    <div class="legendrow">
+      <span><span class="sw" style="background:rgba(26,122,94,.55)"></span>altura del ancla · s²/n</span>
+      <span><span class="sw" style="background:rgba(153,60,29,.55)"></span>pendiente × brazo² · s²(x₀−x̄)²/Sₓₓ</span>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ck" style="color:#1A7A5E">término altura</div><div class="cv" id="f6tA">—</div></div>
+      <div class="card"><div class="ck" style="color:#993C1D">término pendiente</div><div class="cv" id="f6tB">—</div></div>
+      <div class="card"><div class="ck">media-anchura CI = t·√Var</div><div class="cv" id="f6half">—</div></div>
+    </div>
+    <figcaption>El segmento <b style="color:#1A7A5E">verde (s²/n)</b> no se mueve nunca: la incertidumbre de la altura del ancla, igual en todo x₀. El <b style="color:#993C1D">coral (s²·(x₀−x̄)²/Sₓₓ)</b> crece al alejarte de x̄: el error de la pendiente amplificado por el brazo al cuadrado. En x̄ el coral desaparece y el CI es mínimo pero <i>no cero</i>; en los extremos el coral domina. Ese es el reloj de arena, con nombre y apellido en cada término.</figcaption>
+  </figure>
+
+  <div class="callout note">
+    <span class="clabel">Tu palanca de diseño</span>
+    <p>El <strong>Sₓₓ</strong> en el denominador es controlable. Si esparces más tus niveles de dry (más rango, o más réplicas), Sₓₓ sube, el término de pendiente se achica y el abanico se cierra — clavas mejor la recta sin tocar el término de altura. Útil al planear la corrida de calibración: dónde poner los puntos importa tanto como cuántos.</p>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="sec-num">07</div>
+  <h2>El intervalo de predicción: el "1" y la anatomía del error</h2>
+  <p>El PI agrega σ² —la varianza de un lente nuevo, independiente del temblor de la recta— y obtienes s²·[<span class="cpi">1</span> + 1/n + (x₀−x̄)²/Sₓₓ]. Ese <span class="cpi">1</span> es la varianza de la dispersión individual. Estrictamente, el "1" es solo el coeficiente; lo que <em>es</em> la varianza del lente es s²·1 = s² (tu MSE). Para ver por qué aparece, hay que mirar el <strong>error de predicción</strong>: la distancia entre el lente nuevo y lo que predijo tu recta.</p>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 07</span><span class="fig-title">Anatomía de un error de predicción en un x₀</span></div>
+    <div class="svgbox">
+    <svg viewBox="0 0 560 430" role="img" aria-label="Tres alturas en un x fijo: tu recta, la recta verdadera y un lente nuevo, con el error partido en dos tramos.">
+      <line x1="70" y1="35" x2="70" y2="395" stroke="#888780" stroke-width="1" opacity="0.5"/>
+      <text x="58" y="30" text-anchor="end" font-family="system-ui" font-size="12" fill="#5A6068">wet (Y) en x₀ fijo</text>
+
+      <line x1="70" y1="135" x2="370" y2="135" stroke="#23282D" stroke-width="2"/>
+      <circle cx="370" cy="135" r="5" fill="#23282D"/>
+      <text x="382" y="131" font-family="system-ui" font-size="14" font-weight="600" fill="#23282D">ŷ₀ — tu recta</text>
+      <text x="382" y="149" font-family="system-ui" font-size="12" fill="#5A6068">lo que te da el software</text>
+
+      <line x1="70" y1="225" x2="370" y2="225" stroke="#1A7A5E" stroke-width="2" stroke-dasharray="7 5"/>
+      <circle cx="370" cy="225" r="5" fill="#1A7A5E"/>
+      <text x="382" y="221" font-family="system-ui" font-size="14" font-weight="600" fill="#1A7A5E">μ₀ — recta verdadera</text>
+      <text x="382" y="239" font-family="system-ui" font-size="12" fill="#5A6068">no la conoces</text>
+
+      <circle cx="250" cy="350" r="6" fill="#C77D1A"/>
+      <text x="268" y="346" font-family="system-ui" font-size="14" font-weight="600" fill="#9A5E0F">y_nuevo — un lente</text>
+      <text x="268" y="364" font-family="system-ui" font-size="12" fill="#5A6068">una pieza individual</text>
+
+      <line x1="130" y1="135" x2="130" y2="225" stroke="#2C6BAE" stroke-width="6" stroke-linecap="round"/>
+      <text x="118" y="184" text-anchor="end" font-family="system-ui" font-size="12" fill="#2C6BAE">margen CI</text>
+
+      <line x1="195" y1="225" x2="195" y2="350" stroke="#993C1D" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
+      <text x="183" y="291" text-anchor="end" font-family="system-ui" font-size="12" fill="#993C1D">dispersión σ</text>
+
+      <line x1="250" y1="135" x2="250" y2="350" stroke="#C77D1A" stroke-width="6" stroke-linecap="round" opacity="0.55"/>
+
+      <text x="280" y="412" text-anchor="middle" font-family="system-ui" font-size="12.5" fill="#5A6068">margen PI (ámbar) = margen CI (azul) + dispersión σ (coral)</text>
+    </svg>
+    </div>
+    <figcaption>El tramo <b style="color:#2C6BAE">azul</b> (ŷ₀ a μ₀) es el margen del CI: cuánto se desvió tu recta de la verdadera. El tramo <b style="color:#993C1D">coral</b> (μ₀ al lente) es la dispersión propia del lente. El tramo <b style="color:#C77D1A">ámbar</b> completo es el margen del PI — literalmente el azul más el coral.</figcaption>
+  </figure>
+
+  <p>Esto muestra que el CI no es una cosa paralela al PI: está <em>adentro</em> del PI. En términos de varianza:</p>
+  <div class="eqwrap">$$ \mathrm{Var}(\text{PI}) = \underbrace{\sigma^2}_{\textcolor{#C77D1A}{\text{individuo}}} + \underbrace{\sigma^2\!\left[\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^2}{S_{xx}}\right]}_{\textcolor{#2C6BAE}{\text{recta (CI)}}} $$</div>
+  <p>Por eso el PI siempre contiene al CI (lleva su mismo bloque adentro), y por eso al crecer n el CI se desinfla pero el PI tiende a s²·1 = s², que nunca desaparece.</p>
+</section>
+
+<section id="s8">
+  <div class="sec-num">08</div>
+  <h2>La descomposición del error de predicción</h2>
+  <p>El corazón algebraico del PI es una resta partida en dos. Quieres medir el error de predicción, y_nuevo − ŷ₀. El truco es <strong>meter y sacar</strong> μ₀ (la altura de la recta verdadera en x₀): como restas y sumas lo mismo, no cambia nada.</p>
+  <div class="eqwrap">$$ y_{\text{nuevo}} - \hat{y}_0 \;=\; y_{\text{nuevo}} \,\textcolor{#993C1D}{-\,\mu_0} \,\textcolor{#2C6BAE}{+\,\mu_0}\, - \hat{y}_0 $$</div>
+  <p>y reagrupando:</p>
+  <div class="eqwrap">$$ y_{\text{nuevo}} - \hat{y}_0 \;=\; \underbrace{(y_{\text{nuevo}} - \mu_0)}_{\textcolor{#993C1D}{\text{lente vs recta verdadera}}} \;+\; \underbrace{(\mu_0 - \hat{y}_0)}_{\textcolor{#2C6BAE}{\text{recta verdadera vs tu recta}}} $$</div>
+  <p>μ₀ es una "estación intermedia": para ir de ŷ₀ hasta el lente nuevo, pasas por μ₀, y la distancia total es la suma de los dos tramos — exactamente los tramos coral y azul de la Figura 07.</p>
+  <p>El primer tramo, <span class="cco">(y_nuevo − μ₀)</span>, es ruido puro del proceso: la dispersión natural de las piezas alrededor de su media real. Su varianza es σ², y no depende de cuántos datos juntaste. El segundo, <span class="cci">(μ₀ − ŷ₀)</span>, es el error de estimación — el temblor de la recta — con la varianza del CI, que sí se achica con más datos.</p>
+
+  <div class="callout keyeq">
+    <span class="clabel">Por qué cae sola la fórmula del PI</span>
+    <p>Los dos tramos son <strong>independientes</strong> (la dispersión de un lente nuevo no tiene relación con cómo te quedó ajustada la recta). Cuando dos cosas independientes se suman, sus varianzas se suman sin término cruzado:</p>
+    <div class="eqwrap">$$ \mathrm{Var}(y_{\text{nuevo}}-\hat{y}_0) = \sigma^2 + \sigma^2\!\left[\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^2}{S_{xx}}\right] = \sigma^2\!\left[\textcolor{#C77D1A}{1}+\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^2}{S_{xx}}\right] $$</div>
+    <p class="eqnote">El <span class="cpi">1</span> es la varianza del primer tramo (el lente); el resto del corchete es la varianza del segundo (el CI). El PI no es un postulado a memorizar: nace de partir el error en "lente vs recta verdadera" + "recta verdadera vs tu recta".</p>
+  </div>
+</section>
+
+<section id="s9">
+  <div class="sec-num">09</div>
+  <h2>¿De dónde sale σ? Residuos, s y homocedasticidad</h2>
+  <p>El σ verdadero es una propiedad del <strong>proceso</strong>, no de los datos: es la dispersión real de los lentes alrededor de su recta verdadera, y existe la midas o no. Lo que hacen los datos es <em>estimarlo</em>, no crearlo. Esa estimación es s, y se calcula de los <strong>residuos</strong> del ajuste:</p>
+  <div class="eqwrap">$$ s^2 = \frac{\text{SSE}}{n-2} = \frac{\sum_{i}(y_i - \hat{y}_i)^2}{n-2} $$</div>
+  <p>Es decir: tomas cada punto con el que ajustaste, mides su distancia vertical a la recta (el residuo yᵢ − ŷᵢ), elevas al cuadrado, promedias dividiendo por los grados de libertad (n−2), y sacas raíz. <strong>s es el largo típico de un residuo</strong> — cuánto se despega un punto de la recta, en promedio. Por eso estima a σ: ambos miden la dispersión alrededor de la línea.</p>
+
+  <h3>Tres precisiones</h3>
+  <p><strong>s no es la dispersión de los Y ni de los X.</strong> Es la dispersión <em>residual</em>, la parte que la recta no explica. Un dataset con Y muy dispersos pero perfectamente alineados sobre una recta inclinada tiene s chico. Lo que cuenta es cuánto se apartan los puntos <em>de la recta</em>, no su rango total.</p>
+  <p><strong>El mismo s alimenta el CI y el PI.</strong> Es el factor de escala común; en las dos fórmulas s es idéntico. Lo único que cambia entre CI y PI es lo de adentro del radical. Estimar s de los datos fija la escala de ambos intervalos de una vez.</p>
+  <p><strong>Más datos mejoran la estimación de σ, pero no reducen el σ verdadero.</strong> Con más n, s se vuelve más confiable (y t baja hacia 1.96 porque suben los grados de libertad), así que el PI se afina un poquito. Pero el piso real —ese 1·σ²— lo pone el proceso.</p>
+
+  <div class="callout caution">
+    <span class="clabel">Supuesto que conviene chequear</span>
+    <p>La regresión asume que σ es <strong>constante en todo el rango</strong> de dry (homocedasticidad), y por eso un único s, estimado juntando todos los residuos, se aplica en cada x₀. Si en tu proceso la dispersión de wet cambia con el nivel de potencia —digamos que a −6 D los lentes varían más que a −2 D— el supuesto se rompe: el PI quedaría subestimado en los niveles ruidosos y sobreestimado en los tranquilos. Chequéalo con un gráfico de residuos vs. dry (o vs. ŷ): si el abanico de residuos se abre o se cierra a lo largo del rango, el s combinado te está mintiendo, y conviene modelar la varianza por nivel en lugar de un solo σ.</p>
+  </div>
+</section>
+
+<section id="s10">
+  <div class="sec-num">10</div>
+  <h2>R² frente a s: dos métricas de calidad que no miden lo mismo</h2>
+  <p>Con σ ya en la mano, podemos ubicar a R² en su lugar. R² mide qué <em>fracción de la variación total</em> de los wet queda explicada por la recta:</p>
+  <div class="eqwrap">$$ R^2 = 1 - \frac{\text{SSE}}{\text{SST}} = 1 - \frac{\sum (y_i-\hat{y}_i)^2}{\sum (y_i-\bar{y})^2} $$</div>
+  <p>SST es la dispersión total de los wet respecto a su promedio; SSE es la que <em>sobra</em> después de ajustar la recta. R² = 1 sería ajuste perfecto; R² = 0, una recta que no explica nada. Es un número <strong>relativo y adimensional</strong> (entre 0 y 1).</p>
+  <p>El contraste con s es la clave práctica. <strong>s tiene unidades de wet</strong> (dioptrías) y mide el tamaño <em>absoluto</em> del error típico alrededor de la recta — es el mismo s de la sección 09, el largo típico de un residuo. R² es relativo: compara ese error contra la dispersión total, y no tiene unidades.</p>
+
+  <div class="callout note">
+    <span class="clabel">Una nota sobre la notación: s, S y S·y·x</span>
+    <p>Los tres nombres son el mismo número. La <strong>s</strong> de las fórmulas es el error estándar de la estimación, s = √(SSE/(n−2)) — el largo típico de un residuo de la sección 09. En la salida de Minitab aparece etiquetado como <strong>S</strong>, y muchos textos lo escriben <strong>S·y·x</strong>, que se lee "la desviación de y dado x": la dispersión de wet alrededor de la recta, ya descontado el efecto del dry. <strong>s = S = S·y·x</strong>, en dioptrías.</p>
+  </div>
+
+  <h3>Sensible al rango: el mismo proceso, dos R²</h3>
+  <p>Que R² sea "relativo" tiene una consecuencia incómoda. Como compara contra SST = Σ(yᵢ − ȳ)², y SST crece cuando mides un rango ancho de dry, <strong>el mismo proceso puede dar dos R² completamente distintos</strong> según cuán ancho lo barras. Imagina un proceso con ruido residual fijo s = 0.12 D, medido de dos maneras:</p>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>Rango de dry medido</th><th>SST (variación total)</th><th>s</th><th>R²</th></tr></thead>
+    <tbody>
+      <tr><td>Corrida A</td><td>−1 a −7 D (ancho)</td><td>enorme</td><td>0.12 D</td><td>0.998</td></tr>
+      <tr><td>Corrida B</td><td>−3.9 a −4.1 D (angosto)</td><td>minúscula</td><td>0.12 D</td><td>0.15</td></tr>
+    </tbody>
+  </table>
+
+  <p>Es el <strong>mismo proceso</strong> y el <strong>mismo s</strong> en ambas; lo único que cambió es cuán ancho barriste el dry. En la corrida ancha, los wet se dispersan muchísimo (SST gigante), así que el error residual se ve "pequeño en comparación" y R² = 0.998. En la angosta, los wet casi no varían (SST minúscula), y ese mismo error ahora pesa mucho → R² = 0.15. R² saltó de 0.998 a 0.15 sin que el proceso ni la pieza individual cambiaran en nada. Eso es ser <em>sensible al rango</em>: R² te informa tanto del rango que muestreaste como de la calidad del ajuste.</p>
+
+  <p>Para tu flujo real: si calculas R² agrupando de −2 a −6 D, te saldrá hermoso casi sin importar el proceso. La pregunta honesta para conformidad —"¿qué tan lejos cae un lente?"— la contesta s, no ese R². Y aquí está la trampa:</p>
+
+  <div class="callout keyeq">
+    <span class="clabel">Por qué R² alto no garantiza un PI angosto</span>
+    <p>Por eso un R² alto no dice nada sobre el tamaño del error: puedes tener R² = 0.999 y un s —y por tanto un PI— demasiado grande para tu tolerancia. Lo que escala los intervalos es s, no R²:</p>
+    <div class="eqwrap">$$ \text{ancho del PI} \;\propto\; s \quad(\text{no } R^2) $$</div>
+    <p class="eqnote">El PI y el CI se escalan con <span class="ctr">s</span>, no con R². Para conformidad pieza a pieza, la métrica relevante es <strong>s</strong> (el error estándar de la estimación, S·y·x en Minitab), porque es la que está dentro del radical. R² responde "¿la recta explica mucho de la variación?"; s responde "¿qué tan lejos cae una pieza, en dioptrías?".</p>
+  </div>
+
+  <div class="callout analogy">
+    <span class="clabel">Analogía</span>
+    <p>R² es como decir "acerté el 98% del recorrido". El 98% de 1000 km todavía deja 20 km de error; el 98% de 1 metro deja 2 cm. El porcentaje solo no te dice los metros — <strong>s te da los metros</strong>, el error típico en dioptrías. Para un examen escolar el porcentaje alcanza; para aterrizar un avión quieres las unidades absolutas. La calibración es un aterrizaje, no un examen: usa s.</p>
+  </div>
+</section>
+
+<section id="s11">
+  <div class="sec-num">11</div>
+  <h2>Cómo mejoramos el PI</h2>
+  <p>Con más datos achicas el <em>segundo tramo</em> (la incertidumbre de la recta, el CI): los términos 1/n y (x₀−x̄)²/Sₓₓ se desinflan hacia cero. Pero el PI lleva ese <span class="cpi">1</span> adelante —la dispersión del lente individual, σ²— que <strong>no depende de n en absoluto</strong>. En el límite:</p>
+  <div class="eqwrap">$$ \mathrm{Var}(\text{PI}) = \sigma^2\!\left[1+\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^2}{S_{xx}}\right] \;\xrightarrow{\,n\to\infty\,}\; \sigma^2 $$</div>
+  <p>El PI no colapsa sobre la recta como el CI: converge a ŷ₀ ± t·s. Ese es el <strong>piso</strong>. Más datos te llevan <em>hasta</em> ahí, pero ni un milímetro más cerca. Con s ≈ 2 y t ≈ 2, mirando en x̄:</p>
+
+  <table class="tbl">
+    <thead><tr><th>n</th><th>media-anchura CI ≈ t·s·√(1/n)</th><th>media-anchura PI ≈ t·s·√(1+1/n)</th></tr></thead>
+    <tbody>
+      <tr><td>10</td><td>± 1.26</td><td>± 4.20</td></tr>
+      <tr><td>50</td><td>± 0.57</td><td>± 4.04</td></tr>
+      <tr><td>500</td><td>± 0.18</td><td>± 4.00</td></tr>
+      <tr><td>∞</td><td>± 0.00</td><td>± 4.00</td></tr>
+    </tbody>
+  </table>
+
+  <p>El CI se va a cero; el PI se mueve de 4.20 a 4.00 y se planta. Casi todo el "achicamiento" del PI ocurre temprano (de n=10 a n=50 ya se agotó); después, juntar datos es básicamente inútil para estrecharlo. <strong>Un PI más angosto no es un problema de cantidad de datos, es un problema de σ</strong>: el único camino real es reducir la variabilidad del proceso mismo —mejor control, menos ruido de medición, mejor materia prima— que baja σ y por tanto baja ese 1·σ² irreducible.</p>
+
+  <h3>Cuidado al resumir el PI en un solo número</h3>
+  <p>Una tentación práctica es promediar los anchos de PI sobre el dataset y usar un único "±". Eso te da, aproximadamente, t·s·√(1+2/n) ≈ t·s. Sirve como resumen <em>descriptivo</em>, pero no como margen de conformidad, porque aplana el reloj de arena:</p>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 11</span><span class="fig-title">El margen promedio aplana el reloj de arena</span></div>
+    <div class="cards">
+      <div class="card"><div class="ck">H̄ = prom(width)/2</div><div class="cv" id="f7hbar">—</div></div>
+      <div class="card"><div class="ck">t·s (margen residual)</div><div class="cv" id="f7ts">—</div></div>
+      <div class="card"><div class="ck">t·s·√(1+2/n)</div><div class="cv" id="f7approx">—</div></div>
+    </div>
+    <div class="legendrow">
+      <span><span class="sw" style="background:rgba(199,125,26,.22)"></span>PI real (reloj de arena)</span>
+      <span><span class="swl" style="border-top-color:#2C6BAE;border-top-style:dashed"></span>banda plana ŷ ± H̄</span>
+      <span><span class="swl" style="border-top-color:#A32D2D;border-top-style:dashed"></span>cruce de cobertura</span>
+    </div>
+    <div class="chartbox"><canvas id="f7"></canvas></div>
+    <figcaption>Entre los dos cruces rojos (cerca de x̄) la banda plana <b>sobra</b> respecto al PI real. Pasados los cruces, hacia los extremos, el reloj de arena <b>se escapa por afuera</b>: ahí el margen promedio se queda corto y aceptarías piezas que el PI verdadero rechazaría. El promedio no es conservador — subcubre justo donde la incertidumbre es mayor.</figcaption>
+  </figure>
+
+  <p>Si necesitas un solo número para juzgar piezas, no uses el promedio: usa el PI específico de cada x₀ (lo correcto, los límites punto a punto tipo PLIM/PLIM_1), o si insistes en un solo valor, toma el <strong>máximo</strong> sobre tu rango operativo, que sí es conservador. Y si la pregunta real es "¿qué fracción de la <em>población</em> de lentes queda dentro de límites, con cierta confianza?", esa es una pregunta de <strong>intervalo de tolerancia</strong> (factor k) — otra herramienta, distinta del PI, y a menudo la más defendible para liberar lotes.</p>
+</section>
+
+<section id="s12">
+  <div class="sec-num">12</div>
+  <h2>Síntesis operativa</h2>
+  <p>El mapa completo de tu calibración dry-to-wet, en una página:</p>
+
+  <h3>El CI gobierna el centrado</h3>
+  <p>Su único contenido es la incertidumbre de la recta. Te dice dónde está realmente la relación <em>media</em> wet = f(dry), y por eso es la herramienta para fijar el <strong>target del proceso</strong>: dónde centrar. Se desinfla con más datos y con más Sₓₓ.</p>
+
+  <h3>El PI gobierna la conformidad pieza a pieza</h3>
+  <p>Carga también la dispersión del lente individual (el <span class="cpi">1</span>), así que es el único que acota dónde puede aterrizar el wet de un lente <em>real</em>. Son tus límites tipo PLIM/PLIM_1. No colapsa con datos; su piso lo pone σ. Confundirlo con el CI te llevaría a juzgar piezas contra una banda que nunca fue diseñada para contenerlas.</p>
+
+  <h3>R² y s</h3>
+  <p>R² responde "¿la recta explica mucho de la variación?" — relativo, sensible al rango. s (S·y·x) responde "¿qué tan lejos cae una pieza, en dioptrías?" — absoluto, y es lo que escala ambos intervalos. Para conformidad, mira s.</p>
+
+  <div class="callout keyeq">
+    <span class="clabel">Las tres decisiones</span>
+    <p><span class="cci">Centrar el proceso</span> → mira el CI (y bajalo con n y Sₓₓ). &nbsp;·&nbsp; <span class="cpi">Juzgar piezas</span> → usa el PI punto a punto. &nbsp;·&nbsp; <span class="ctr">Estrechar el PI</span> → no junta datos, reducí σ mejorando el proceso.</p>
+  </div>
+  <p style="color:#5A6068;font-size:15px;margin-top:30px">Las figuras de este documento son interactivas y comparten el mismo conjunto de datos sintético (n = 14, recta verdadera wet = 2 + 1.4·dry, σ ≈ 2.4 D) para que la recta y los puntos sean los mismos a lo largo de toda la lectura.</p>
+</section>
+
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded",function(){
+  renderMathInElement(document.body,{
+    delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}],
+    throwOnError:false,trust:true
+  });
+});
+
+/* ---------- scrollspy ---------- */
+(function(){
+  const links=[...document.querySelectorAll('.sb-nav a')];
+  const map={};links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver((es)=>{
+    es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));if(map[e.target.id])map[e.target.id].classList.add('active');}});
+  },{rootMargin:"-15% 0px -75% 0px"});
+  document.querySelectorAll('section').forEach(s=>obs.observe(s));
+  links.forEach(a=>a.addEventListener('click',()=>document.querySelector('.sidebar').classList.remove('open')));
+})();
+
+/* ---------- shared stats helpers ---------- */
+const PAL={ci:'#2C6BAE',pi:'#C77D1A',truth:'#1A7A5E',ink:'#23282D',grid:'rgba(0,0,0,0.06)',tick:'#6b6b6b',
+  ciFill:'rgba(44,107,174,0.16)',ciFill2:'rgba(44,107,174,0.28)',piFill:'rgba(199,125,26,0.14)',coral:'#993C1D'};
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function tcrit(df){const z=1.959964;return z+(z**3+z)/4/df+(5*z**5+16*z**3+3*z)/96/df/df+(3*z**7+19*z**5+17*z**3-15*z)/384/df/df/df;}
+function gaussGen(rnd){return function(){let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};}
+function makeModel(seed,N){
+  const rnd=mulberry32(seed),g=gaussGen(rnd),pts=[];
+  for(let i=0;i<N;i++){const x=1+9*rnd();pts.push({x,y:2.0+1.4*x+2.4*g()});}
+  let mx=0,my=0;for(const p of pts){mx+=p.x;my+=p.y;}mx/=N;my/=N;
+  let Sxx=0,Sxy=0;for(const p of pts){Sxx+=(p.x-mx)**2;Sxy+=(p.x-mx)*(p.y-my);}
+  const b=Sxy/Sxx,a=my-b*mx;let sse=0;for(const p of pts){sse+=(p.y-(a+b*p.x))**2;}
+  const s=Math.sqrt(sse/(N-2)),t=tcrit(N-2);
+  return {pts,mx,Sxx,a,b,s,t,N,yhat:x=>a+b*x,
+    ciH:x=>t*s*Math.sqrt(1/N+(x-mx)**2/Sxx),
+    piH:x=>t*s*Math.sqrt(1+1/N+(x-mx)**2/Sxx)};
+}
+const M=makeModel(7,14);
+const baseAxes=(yMin,yMax,xt)=>({x:{type:'linear',min:0.5,max:10.5,title:{display:true,text:xt||'Dry power (X)',color:PAL.tick,font:{size:12}},grid:{color:PAL.grid},ticks:{color:PAL.tick}},y:{min:yMin,max:yMax,title:{display:true,text:'Wet power (Y)',color:PAL.tick,font:{size:12}},grid:{color:PAL.grid},ticks:{color:PAL.tick}}});
+const noChrome={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:false}}};
+const grid60=(()=>{const a=[];for(let i=0;i<=60;i++)a.push(1+9*i/60);return a;})();
+
+/* ===== Figura 2: ensemble ===== */
+(function(){
+  const altSeeds=[];for(let i=1;i<=80;i++)altSeeds.push(1000+i*37);
+  const NE=12;let chart;
+  function fitLine(seed){const rnd=mulberry32(seed),g=gaussGen(rnd);let sx=0,sy=0,sxx=0,sxy=0,X=[],Y=[];for(let i=0;i<NE;i++){const x=1+9*rnd();const y=2.0+1.4*x+2.4*g();X.push(x);Y.push(y);sx+=x;sy+=y;}const mx=sx/NE,my=sy/NE;for(let i=0;i<NE;i++){sxx+=(X[i]-mx)**2;sxy+=(X[i]-mx)*(Y[i]-my);}const b=sxy/sxx,a=my-b*mx;return {a,b};}
+  const prim=makeModel(7,NE);
+  function render(K){
+    const ciU=grid60.map(x=>({x,y:prim.yhat(x)+prim.ciH(x)})),ciL=grid60.map(x=>({x,y:prim.yhat(x)-prim.ciH(x)}));
+    const ds=[{data:ciU,type:'line',borderColor:'rgba(44,107,174,.3)',borderWidth:1,pointRadius:0,fill:false},
+      {data:ciL,type:'line',borderColor:'rgba(44,107,174,.3)',borderWidth:1,pointRadius:0,fill:{target:0},backgroundColor:PAL.ciFill}];
+    for(let i=0;i<K;i++){const f=fitLine(altSeeds[i]);ds.push({data:[{x:1,y:f.a+f.b},{x:10,y:f.a+f.b*10}],type:'line',borderColor:'rgba(216,90,48,.32)',borderWidth:1,pointRadius:0,fill:false});}
+    ds.push({data:[{x:1,y:2+1.4},{x:10,y:2+14}],type:'line',borderColor:PAL.truth,borderWidth:2,borderDash:[7,5],pointRadius:0,fill:false});
+    ds.push({data:[{x:1,y:prim.yhat(1)},{x:10,y:prim.yhat(10)}],type:'line',borderColor:PAL.ink,borderWidth:2.5,pointRadius:0,fill:false});
+    ds.push({data:prim.pts,type:'scatter',backgroundColor:'rgba(95,94,90,.5)',borderColor:'rgba(95,94,90,.5)',pointRadius:2.6});
+    if(chart){chart.data.datasets=ds;chart.update('none');return;}
+    chart=new Chart(document.getElementById('f2'),{data:{datasets:ds},options:{...noChrome,scales:baseAxes(0,20)}});
+  }
+  render(30);
+  document.getElementById('f2k').addEventListener('input',e=>{document.getElementById('f2kv').textContent=e.target.value;render(+e.target.value);});
+})();
+
+/* ===== Figura 3: bands + n ===== */
+(function(){
+  const POOL=200,pool=[],rnd=mulberry32(20260622),g=gaussGen(rnd);
+  for(let i=0;i<POOL;i++){const x=1+9*rnd();pool.push({x,y:2.0+1.5*x+2.0*g()});}
+  let chart;
+  function fitN(n){const pts=pool.slice(0,n);let mx=0,my=0;for(const p of pts){mx+=p.x;my+=p.y;}mx/=n;my/=n;let Sxx=0,Sxy=0;for(const p of pts){Sxx+=(p.x-mx)**2;Sxy+=(p.x-mx)*(p.y-my);}const b=Sxy/Sxx,a=my-b*mx;let sse=0;for(const p of pts){sse+=(p.y-(a+b*p.x))**2;}const s=Math.sqrt(sse/(n-2)),t=tcrit(n-2);return {pts,mx,Sxx,n,t,s,yhat:x=>a+b*x,ciH:x=>t*s*Math.sqrt(1/n+(x-mx)**2/Sxx),piH:x=>t*s*Math.sqrt(1+1/n+(x-mx)**2/Sxx)};}
+  function render(n){
+    const f=fitN(n);
+    const ciU=grid60.map(x=>({x,y:f.yhat(x)+f.ciH(x)})),ciL=grid60.map(x=>({x,y:f.yhat(x)-f.ciH(x)}));
+    const piU=grid60.map(x=>({x,y:f.yhat(x)+f.piH(x)})),piL=grid60.map(x=>({x,y:f.yhat(x)-f.piH(x)}));
+    let inCI=0,inPI=0;for(const p of f.pts){const yh=f.yhat(p.x);if(Math.abs(p.y-yh)<=f.ciH(p.x))inCI++;if(Math.abs(p.y-yh)<=f.piH(p.x))inPI++;}
+    document.getElementById('f3ratio').textContent=Math.sqrt(n+1).toFixed(1)+'×';
+    document.getElementById('f3ci').textContent=inCI+'/'+n+' ('+Math.round(100*inCI/n)+'%)';
+    document.getElementById('f3pi').textContent=inPI+'/'+n+' ('+Math.round(100*inPI/n)+'%)';
+    const ds=[{data:piU,type:'line',borderColor:'rgba(199,125,26,.35)',borderWidth:1,pointRadius:0,fill:false},
+      {data:piL,type:'line',borderColor:'rgba(199,125,26,.35)',borderWidth:1,pointRadius:0,fill:{target:0},backgroundColor:'rgba(199,125,26,.16)'},
+      {data:ciU,type:'line',borderColor:'rgba(44,107,174,.45)',borderWidth:1,pointRadius:0,fill:false},
+      {data:ciL,type:'line',borderColor:'rgba(44,107,174,.45)',borderWidth:1,pointRadius:0,fill:{target:2},backgroundColor:PAL.ciFill2},
+      {data:grid60.map(x=>({x,y:f.yhat(x)})),type:'line',borderColor:PAL.ink,borderWidth:2,pointRadius:0,fill:false},
+      {data:f.pts,type:'scatter',backgroundColor:'rgba(26,122,94,.8)',borderColor:'#0F6E56',borderWidth:1,pointRadius:3}];
+    if(chart){chart.data.datasets=ds;chart.update('none');return;}
+    chart=new Chart(document.getElementById('f3'),{data:{datasets:ds},options:{...noChrome,scales:baseAxes(undefined,undefined)}});
+  }
+  render(15);
+  document.getElementById('f3n').addEventListener('input',e=>{document.getElementById('f3nv').textContent=e.target.value;render(+e.target.value);});
+})();
+
+/* ===== Figura 4: columna ===== */
+(function(){
+  const Mn=30,zc=[],jit=[],r2=mulberry32(99),g2=gaussGen(r2);
+  for(let i=0;i<Mn;i++){zc.push(g2());jit.push((r2()-0.5)*0.16);}
+  const zm=zc.reduce((p,c)=>p+c,0)/Mn;for(let i=0;i<Mn;i++)zc[i]-=zm;
+  let chart;
+  function render(x0){
+    const yh=M.yhat(x0),ch=M.ciH(x0);
+    document.getElementById('f4xv').textContent=x0.toFixed(1);
+    document.getElementById('f4g').textContent=x0.toFixed(1);
+    document.getElementById('f4y').textContent=yh.toFixed(2);
+    document.getElementById('f4ci').textContent='['+(yh-ch).toFixed(2)+', '+(yh+ch).toFixed(2)+']';
+    const cloud=zc.map((zz,i)=>({x:x0+jit[i],y:yh+M.s*zz}));
+    const ds=[{data:grid60.map(x=>({x,y:M.yhat(x)})),type:'line',borderColor:PAL.ink,borderWidth:2,pointRadius:0,fill:false},
+      {data:cloud,type:'scatter',backgroundColor:'rgba(26,122,94,.45)',borderColor:'rgba(26,122,94,.45)',pointRadius:3.4},
+      {data:[{x:x0,y:0},{x:x0,y:20}],type:'line',borderColor:'rgba(0,0,0,.16)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
+      {data:[{x:x0-0.55,y:yh},{x:x0+0.55,y:yh}],type:'line',borderColor:PAL.ink,borderWidth:2,pointRadius:0,fill:false},
+      {data:[{x:x0,y:yh-ch},{x:x0,y:yh+ch}],type:'line',borderColor:PAL.ci,borderWidth:6,pointRadius:6,pointBackgroundColor:PAL.ci,pointBorderColor:PAL.ci,fill:false},
+      {data:[{x:x0,y:yh}],type:'scatter',backgroundColor:PAL.ink,borderColor:'#fff',borderWidth:1.5,pointRadius:6}];
+    if(chart){chart.data.datasets=ds;chart.update('none');return;}
+    chart=new Chart(document.getElementById('f4'),{data:{datasets:ds},options:{...noChrome,scales:baseAxes(0,20)}});
+  }
+  render(6);
+  document.getElementById('f4x').addEventListener('input',e=>render(+e.target.value));
+})();
+
+/* ===== Figura 5: single x0 brackets ===== */
+(function(){
+  const piU=grid60.map(x=>({x,y:M.yhat(x)+M.piH(x)})),piL=grid60.map(x=>({x,y:M.yhat(x)-M.piH(x)}));
+  const ciU=grid60.map(x=>({x,y:M.yhat(x)+M.ciH(x)})),ciL=grid60.map(x=>({x,y:M.yhat(x)-M.ciH(x)}));
+  let chart;
+  function render(x0){
+    const yh=M.yhat(x0),ch=M.ciH(x0),ph=M.piH(x0);
+    document.getElementById('f5xv').textContent=x0.toFixed(1);
+    document.getElementById('f5y').textContent=yh.toFixed(2);
+    document.getElementById('f5ci').textContent='['+(yh-ch).toFixed(2)+', '+(yh+ch).toFixed(2)+']';
+    document.getElementById('f5pi').textContent='['+(yh-ph).toFixed(2)+', '+(yh+ph).toFixed(2)+']';
+    const ds=[{data:piU,type:'line',borderColor:'rgba(199,125,26,.22)',borderWidth:1,pointRadius:0,fill:false},
+      {data:piL,type:'line',borderColor:'rgba(199,125,26,.22)',borderWidth:1,pointRadius:0,fill:{target:0},backgroundColor:'rgba(199,125,26,.10)'},
+      {data:ciU,type:'line',borderColor:'rgba(44,107,174,.25)',borderWidth:1,pointRadius:0,fill:false},
+      {data:ciL,type:'line',borderColor:'rgba(44,107,174,.25)',borderWidth:1,pointRadius:0,fill:{target:2},backgroundColor:'rgba(44,107,174,.13)'},
+      {data:grid60.map(x=>({x,y:M.yhat(x)})),type:'line',borderColor:PAL.ink,borderWidth:2,pointRadius:0,fill:false},
+      {data:[{x:x0,y:0},{x:x0,y:20}],type:'line',borderColor:'rgba(0,0,0,.16)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
+      {data:[{x:x0+0.16,y:yh-ph},{x:x0+0.16,y:yh+ph}],type:'line',borderColor:PAL.pi,borderWidth:5,pointRadius:5,pointBackgroundColor:PAL.pi,pointBorderColor:PAL.pi,fill:false},
+      {data:[{x:x0-0.16,y:yh-ch},{x:x0-0.16,y:yh+ch}],type:'line',borderColor:PAL.ci,borderWidth:5,pointRadius:5,pointBackgroundColor:PAL.ci,pointBorderColor:PAL.ci,fill:false},
+      {data:[{x:x0,y:yh}],type:'scatter',backgroundColor:PAL.ink,borderColor:'#fff',borderWidth:1.5,pointRadius:6}];
+    if(chart){chart.data.datasets=ds;chart.update('none');return;}
+    chart=new Chart(document.getElementById('f5'),{data:{datasets:ds},options:{...noChrome,scales:baseAxes(0,20)}});
+  }
+  render(8);
+  document.getElementById('f5x').addEventListener('input',e=>render(+e.target.value));
+})();
+
+/* ===== Figura 6: variance bar ===== */
+(function(){
+  const s2=M.s*M.s,A=s2/M.N,Bof=x=>s2*(x-M.mx)**2/M.Sxx;
+  const lever=Math.max(Math.abs(1.5-M.mx),Math.abs(9.5-M.mx)),maxVar=A+s2*lever*lever/M.Sxx;
+  const ciU=grid60.map(x=>({x,y:M.yhat(x)+M.ciH(x)})),ciL=grid60.map(x=>({x,y:M.yhat(x)-M.ciH(x)}));
+  let chart;
+  function render(x0){
+    const B=Bof(x0),v=A+B,half=M.t*Math.sqrt(v),yh=M.yhat(x0);
+    document.getElementById('f6xv').textContent=x0.toFixed(1);
+    document.getElementById('f6tA').textContent=A.toFixed(3);
+    document.getElementById('f6tB').textContent=B.toFixed(3);
+    document.getElementById('f6half').textContent='± '+half.toFixed(2);
+    document.getElementById('f6A').style.width=(A/maxVar*100)+'%';
+    document.getElementById('f6B').style.width=(B/maxVar*100)+'%';
+    const ds=[{data:ciU,type:'line',borderColor:'rgba(44,107,174,.3)',borderWidth:1,pointRadius:0,fill:false},
+      {data:ciL,type:'line',borderColor:'rgba(44,107,174,.3)',borderWidth:1,pointRadius:0,fill:{target:0},backgroundColor:PAL.ciFill},
+      {data:grid60.map(x=>({x,y:M.yhat(x)})),type:'line',borderColor:PAL.ink,borderWidth:2,pointRadius:0,fill:false},
+      {data:[{x:x0,y:0},{x:x0,y:20}],type:'line',borderColor:'rgba(0,0,0,.18)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false},
+      {data:[{x:x0,y:yh-half},{x:x0,y:yh+half}],type:'line',borderColor:PAL.ci,borderWidth:5,pointRadius:5,pointBackgroundColor:PAL.ci,pointBorderColor:PAL.ci,fill:false},
+      {data:[{x:x0,y:yh}],type:'scatter',backgroundColor:PAL.ink,borderColor:'#fff',borderWidth:1.5,pointRadius:5}];
+    if(chart){chart.data.datasets=ds;chart.update('none');return;}
+    chart=new Chart(document.getElementById('f6'),{data:{datasets:ds},options:{...noChrome,scales:baseAxes(0,20,'Dry power (X)  ·  x̄='+M.mx.toFixed(2))}});
+  }
+  render(8);
+  document.getElementById('f6x').addEventListener('input',e=>render(+e.target.value));
+})();
+
+/* ===== Figura 11: flat vs hourglass ===== */
+(function(){
+  let Hsum=0;for(const p of M.pts)Hsum+=M.piH(p.x);const Hbar=Hsum/M.N;
+  const ts=M.t*M.s,approx=M.t*M.s*Math.sqrt(1+2/M.N);
+  document.getElementById('f7hbar').textContent='± '+Hbar.toFixed(2);
+  document.getElementById('f7ts').textContent='± '+ts.toFixed(2);
+  document.getElementById('f7approx').textContent='± '+approx.toFixed(2);
+  const arg=(Hbar/(M.t*M.s))**2-1-1/M.N;let xc1=null,xc2=null;
+  if(arg>0){const d=Math.sqrt(arg*M.Sxx);xc1=M.mx-d;xc2=M.mx+d;}
+  const g80=[];for(let i=0;i<=80;i++)g80.push(1+9*i/80);
+  const piU=g80.map(x=>({x,y:M.yhat(x)+M.piH(x)})),piL=g80.map(x=>({x,y:M.yhat(x)-M.piH(x)}));
+  const flatU=g80.map(x=>({x,y:M.yhat(x)+Hbar})),flatL=g80.map(x=>({x,y:M.yhat(x)-Hbar}));
+  const ds=[{data:piU,type:'line',borderColor:'rgba(199,125,26,.4)',borderWidth:1.5,pointRadius:0,fill:false},
+    {data:piL,type:'line',borderColor:'rgba(199,125,26,.4)',borderWidth:1.5,pointRadius:0,fill:{target:0},backgroundColor:'rgba(199,125,26,.13)'},
+    {data:g80.map(x=>({x,y:M.yhat(x)})),type:'line',borderColor:PAL.ink,borderWidth:2,pointRadius:0,fill:false},
+    {data:flatU,type:'line',borderColor:PAL.ci,borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false},
+    {data:flatL,type:'line',borderColor:PAL.ci,borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false},
+    {data:M.pts,type:'scatter',backgroundColor:'rgba(95,94,90,.4)',borderColor:'rgba(95,94,90,.4)',pointRadius:2.4}];
+  if(xc1!==null){ds.push({data:[{x:xc1,y:0},{x:xc1,y:24}],type:'line',borderColor:'rgba(163,45,45,.7)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false});
+    ds.push({data:[{x:xc2,y:0},{x:xc2,y:24}],type:'line',borderColor:'rgba(163,45,45,.7)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false});}
+  new Chart(document.getElementById('f7'),{data:{datasets:ds},options:{...noChrome,scales:baseAxes(0,24,'Dry power (X)  ·  x̄='+M.mx.toFixed(2))}});
+})();
+</script>
+</body>
+</html>
