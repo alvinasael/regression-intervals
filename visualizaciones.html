@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galería de visualizaciones · Regresión, CI y PI</title>
+<style>
+:root{
+  --ink:#23282D; --ci:#2C6BAE; --pi:#C77D1A; --truth:#1A7A5E; --coral:#993C1D;
+  --page:#ECEBE7; --card:#FFFFFF; --ctl:#F7F6F2; --rule:#E2E0D9; --soft:#6B6B6B;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+header{padding:38px 6vw 22px;max-width:1200px;margin:0 auto}
+h1{font-size:26px;margin:0 0 8px;font-weight:600}
+.intro{font-size:14.5px;color:var(--soft);max-width:70ch;margin:0}
+.intro b{color:var(--ink)}
+.backlink{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ci);text-decoration:none;font-weight:500;margin-bottom:14px;border:1px solid var(--rule);background:#fff;padding:6px 13px;border-radius:20px}
+.backlink:hover{background:var(--ci);color:#fff;border-color:var(--ci)}
+main{max-width:1200px;margin:0 auto;padding:8px 5vw 90px;
+  display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+@media(min-width:880px){main{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+@media(max-width:560px){
+  header{padding:22px 16px 12px}
+  h1{font-size:21px}
+  .intro{font-size:13.5px}
+  main{padding:6px 14px 64px;gap:18px}
+  .cap{padding:10px}
+  .cap .chartbox{height:255px}
+  .ctl{gap:8px 10px}
+  .ctl .row{min-width:100%}
+  .btn{padding:8px 13px;font-size:13px}
+  .formula{font-size:13px}
+  .block h3{font-size:14px}
+}
+.block{min-width:0}
+.block h3{font-size:15px;font-weight:600;margin:0 0 9px;color:var(--ink)}
+.block h3 span{color:var(--soft);font-weight:500}
+.viz{background:var(--card);border:1px solid var(--rule);border-radius:12px;overflow:hidden;min-width:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.04)}
+/* CAPTURE AREA — limpia, esto es lo que se copia */
+.cap{background:#fff;padding:14px}
+.cap .chartbox{position:relative;width:100%;height:300px}
+/* CONTROLES — franja separada, NO se copia */
+.ctl{background:var(--ctl);border-top:1px solid var(--rule);padding:11px 14px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:13px;color:var(--soft)}
+.ctl .row{display:flex;align-items:center;gap:9px;flex:1;min-width:170px}
+.ctl label{white-space:nowrap}
+.ctl input[type=range]{flex:1;min-width:90px;accent-color:var(--ci)}
+.ctl .val{font-weight:600;color:var(--ink);min-width:30px;text-align:right;font-variant-numeric:tabular-nums}
+.btn{border:1px solid var(--rule);background:#fff;color:var(--ink);border-radius:7px;
+  padding:6px 11px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap}
+.btn:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.tog.on{background:var(--ci);color:#fff;border-color:var(--ci)}
+.dl{margin-left:auto}
+.key{display:flex;gap:12px;flex-wrap:wrap;width:100%;margin-top:2px;font-size:11.5px}
+.key span{display:flex;align-items:center;gap:5px}
+.key .sw{width:14px;height:9px;border-radius:2px}
+.key .swl{width:15px;height:0;border-top:2px solid}
+.tag{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:#A8A6A0;width:100%}
+.explain{font-size:13px;color:#57564F;line-height:1.55;margin:10px 3px 0}
+.explain b{color:var(--ink);font-weight:600}
+.formula{margin:10px 3px 0;padding:9px 13px;background:#F2F5F9;border-left:3px solid var(--ci);border-radius:0 7px 7px 0;overflow:hidden;font-size:14px;color:#1f2d3d}
+.formula .katex-display{margin:0;text-align:left}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+</head>
+<body>
+
+<header>
+  <a class="backlink" href="index.html">← Documento completo: Intervalos de confianza y predicción</a>
+  <h1>Galería de visualizaciones · Regresión, CI y PI</h1>
+  <p class="intro">Gráficas limpias para explicar conceptos. <b>El área blanca es lo que copias</b> — sin labels ni títulos. Los controles viven en la franja gris de abajo y <b>nunca tapan ni aparecen en la gráfica</b>. Para llevarla a PowerPoint, usa <b>“Descargar PNG”</b> (exporta solo la gráfica, fondo blanco) o recorta el área blanca.</p>
+</header>
+
+<main>
+
+  <div class="block">
+    <h3>1 · Variación en y alrededor de la recta <span>— la nube y sus residuos</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v1"></canvas></div></div>
+      <div class="ctl">
+        <div class="row"><label>Dispersión (σ)</label><input type="range" id="v1s" min="0.4" max="2.6" step="0.1" value="1.6"><span class="val" id="v1sv">1.6</span></div>
+        <button class="btn tog on" id="v1r">Residuos</button>
+        <button class="btn dl" data-cv="v1" data-name="nube-residuos">Descargar PNG</button>
+        <div class="key"><span><span class="swl" style="border-color:#23282D"></span>recta</span><span><span class="sw" style="background:rgba(26,122,94,.8)"></span>datos</span><span><span class="swl" style="border-color:#993C1D"></span>residuo</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ e_i = y_i-\hat{y}_i \qquad s=\sqrt{\dfrac{\sum e_i^{2}}{n-2}} $$</div>
+    <p class="explain"><b>Qué explica:</b> La variación de los datos alrededor de la recta. Cada segmento (residuo) es cuánto se aparta una pieza de lo predicho; el tamaño típico de esos residuos es <b>s</b> (que estima a σ), el motor de todos los intervalos. Más σ → nube más regada → s más grande.</p>
+  </div>
+
+  <div class="block">
+    <h3>2 · Visualización de s <span>— el residuo típico (estima a σ)</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v8"></canvas></div></div>
+      <div class="ctl">
+        <div class="row"><label>Dispersión (σ)</label><input type="range" id="v8s" min="0.4" max="2.4" step="0.1" value="1.3"><span class="val" id="v8sv">1.3</span></div>
+        <div class="key" style="width:auto;margin:0;gap:14px"><span>s <b id="v8sval" style="color:#23282D">—</b></span><span>±s <b id="v8p1" style="color:#23282D">—</b></span><span>±2s <b id="v8p2" style="color:#23282D">—</b></span></div>
+        <button class="btn dl" data-cv="v8" data-name="visualizacion-s">Descargar PNG</button>
+        <div class="key"><span><span class="sw" style="background:rgba(26,122,94,.82)"></span>dentro ±s</span><span><span class="sw" style="background:rgba(44,107,174,.75)"></span>±s a ±2s</span><span><span class="sw" style="background:rgba(163,45,45,.85)"></span>fuera ±2s</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ s=\sqrt{\dfrac{\sum (y_i-\hat{y}_i)^{2}}{n-2}}\;\approx\;\sigma \qquad \pm s:{\sim}68\%\quad \pm 2s:{\sim}95\% $$</div>
+    <p class="explain"><b>Qué explica:</b> <b>s</b> es el tamaño típico de un residuo (la raíz del promedio de los residuos al cuadrado) y es el estimador de <b>σ</b>. Las bandas de ancho constante <b>±s</b> y <b>±2s</b> —paralelas a la recta— muestran ese esparcimiento: cerca de <b>68%</b> de las piezas caen dentro de ±s y <b>~95%</b> dentro de ±2s. El PI es esencialmente estas bandas (±~2s) con un poco extra en los bordes; por eso <b>s es el motor del PI</b>.</p>
+  </div>
+
+  <div class="block">
+    <h3>3 · Variación total vs. residual <span>— lo que la recta explica (R²)</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v2"></canvas></div></div>
+      <div class="ctl">
+        <button class="btn tog" id="v2m">Respecto al promedio</button>
+        <span style="font-size:12px">↔ alterna ↔</span>
+        <button class="btn dl" data-cv="v2" data-name="total-vs-residual">Descargar PNG</button>
+        <div class="key"><span id="v2k1"><span class="swl" style="border-color:#23282D"></span>recta</span><span><span class="swl" style="border-color:#993C1D"></span>desviación</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ R^{2} = 1-\dfrac{\text{SSE}}{\text{SST}} = 1-\dfrac{\sum (y_i-\hat{y}_i)^{2}}{\sum (y_i-\bar{y})^{2}} $$</div>
+    <p class="explain"><b>Qué explica:</b> De dónde sale <b>R²</b>. “Respecto al promedio” = variación total (SST). “Respecto a la recta” = lo que queda sin explicar (SSE). <b>R² = 1 − SSE/SST</b>: la fracción que la recta sí explicó. Es relativo — depende del rango de x, no del tamaño absoluto del error.</p>
+  </div>
+
+  <div class="block">
+    <h3>4 · Bandas de confianza y predicción <span>— CI y PI</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v3"></canvas></div></div>
+      <div class="ctl">
+        <div class="row"><label>n</label><input type="range" id="v3n" min="6" max="200" step="1" value="20"><span class="val" id="v3nv">20</span></div>
+        <div class="row"><label>σ (proceso)</label><input type="range" id="v3s" min="0.5" max="2.2" step="0.1" value="1.5"><span class="val" id="v3sv">1.5</span></div>
+        <button class="btn tog on" id="v3ci">CI</button>
+        <button class="btn tog on" id="v3pi">PI</button>
+        <button class="btn dl" data-cv="v3" data-name="bandas-ci-pi">Descargar PNG</button>
+        <div class="key"><span><span class="sw" style="background:rgba(44,107,174,.4)"></span>CI</span><span><span class="sw" style="background:rgba(199,125,26,.28)"></span>PI</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ \text{CI: }\hat{y}_0\pm t\,s\sqrt{\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^{2}}{S_{xx}}}\qquad \text{PI: }\hat{y}_0\pm t\,s\sqrt{\mathbf{1}+\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^{2}}{S_{xx}}} $$</div>
+    <p class="explain"><b>Qué explica:</b> La diferencia central. <b>CI</b> (azul, angosto) = dónde está la recta promedio. <b>PI</b> (ámbar, ancho) = dónde cae una pieza individual. Mueve <b>σ</b> y verás el PI crecer o encogerse; mueve <b>n</b> y el PI casi no cambia (pero el CI sí). <b>Factor principal del CI: n. Factor principal del PI: σ.</b></p>
+  </div>
+
+  <div class="block">
+    <h3>5 · La recta tiembla <span>— el abanico de rectas posibles (CI)</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v4"></canvas></div></div>
+      <div class="ctl">
+        <div class="row"><label>Rectas alternas</label><input type="range" id="v4k" min="1" max="80" step="1" value="35"><span class="val" id="v4kv">35</span></div>
+        <button class="btn dl" data-cv="v4" data-name="abanico-rectas">Descargar PNG</button>
+        <div class="key"><span><span class="swl" style="border-color:#1A7A5E;border-style:dashed"></span>verdadera</span><span><span class="swl" style="border-color:#23282D"></span>tu recta</span><span><span class="swl" style="border-color:#D85A30"></span>alternas</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ \mathrm{Var}(\hat{b})=\dfrac{\sigma^{2}}{S_{xx}}\qquad \mathrm{Var}(\hat{y}_0)=\sigma^{2}\!\left[\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^{2}}{S_{xx}}\right] $$</div>
+    <p class="explain"><b>Qué explica:</b> Por qué existe el CI y qué lo mueve. Cada recta coral es la que saldría con otra muestra; el abanico <b>es</b> el CI. Más datos → las rectas se aprietan → el CI se cierra. <b>Factor principal del CI: n (y la dispersión de los x, Sₓₓ).</b></p>
+  </div>
+
+  <div class="block">
+    <h3>6 · CI vs. PI en un punto <span>— el promedio vs. una pieza</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v5"></canvas></div></div>
+      <div class="ctl">
+        <div class="row"><label>x₀</label><input type="range" id="v5x" min="1" max="9" step="0.1" value="6.5"><span class="val" id="v5xv">6.5</span></div>
+        <button class="btn dl" data-cv="v5" data-name="ci-pi-punto">Descargar PNG</button>
+        <div class="key"><span><span class="swl" style="border-color:#2C6BAE"></span>CI</span><span><span class="swl" style="border-color:#C77D1A"></span>PI</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ \mathrm{Var}(\text{PI})=\underbrace{\sigma^{2}}_{\text{pieza}}+\underbrace{\sigma^{2}\!\left[\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^{2}}{S_{xx}}\right]}_{\text{recta (CI)}} $$</div>
+    <p class="explain"><b>Qué explica:</b> Que CI y PI cuelgan del mismo ŷ pero miden cosas distintas: el azul, el promedio; el ámbar, una pieza individual. El ámbar siempre contiene al azul.</p>
+  </div>
+
+  <div class="block">
+    <h3>7 · Distribución de los errores <span>— misma dispersión en todo el rango (PI)</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v6"></canvas></div></div>
+      <div class="ctl">
+        <div class="row"><label>Dispersión (σ)</label><input type="range" id="v6s" min="0.5" max="2" step="0.1" value="1.4"><span class="val" id="v6sv">1.4</span></div>
+        <button class="btn dl" data-cv="v6" data-name="distribucion-errores">Descargar PNG</button>
+        <div class="key"><span><span class="swl" style="border-color:#23282D"></span>recta</span><span><span class="sw" style="background:rgba(44,107,174,.25)"></span>distribución del error</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ Y\mid x \sim \mathcal{N}\!\big(\mu(x),\,\sigma^{2}\big)\qquad \text{ancho de la campana}=\sigma $$</div>
+    <p class="explain"><b>Qué explica:</b> Qué mueve el <b>PI</b>. El ancho de cada campana es <b>σ</b> — la dispersión de una pieza individual. El PI envuelve estas campanas. Reduce σ y las campanas (y el PI) se angostan; juntar datos no las toca. <b>Factor principal del PI: σ.</b></p>
+  </div>
+
+  <div class="block">
+    <h3>8 · R² alto, pero las piezas caen fuera del CI <span>— el error de conformidad</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v7"></canvas></div></div>
+      <div class="ctl">
+        <button class="btn tog" id="v7p">Mostrar PI</button>
+        <div class="key" style="width:auto;margin:0;gap:14px"><span>R² <b id="v7r2" style="color:#23282D">—</b></span><span>dentro CI <b id="v7ci" style="color:#23282D">—</b></span><span>dentro PI <b id="v7pi" style="color:#23282D">—</b></span></div>
+        <button class="btn dl" data-cv="v7" data-name="r2alto-piezas-fuera-ci">Descargar PNG</button>
+        <div class="key"><span><span class="sw" style="background:rgba(26,122,94,.82)"></span>dentro del CI</span><span><span class="sw" style="background:rgba(163,45,45,.85)"></span>fuera del CI</span><span><span class="sw" style="background:rgba(44,107,174,.3)"></span>CI</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ \underbrace{R^{2}=1-\tfrac{\text{SSE}}{\text{SST}}}_{\text{alto}}\ \not\Rightarrow\ \text{PI angosto}\,;\quad \text{conformidad}\to \hat{y}_0\pm t s\sqrt{\mathbf{1}+\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^{2}}{S_{xx}}} $$</div>
+    <p class="explain"><b>Qué explica:</b> El error más común en conformidad. Aquí <b>R² es altísimo</b> y la recta ajusta muy bien, pero al juzgar piezas contra el <b>CI</b> (banda angosta) <b>la mayoría cae FUERA</b> (puntos rojos) — porque el CI nunca fue para piezas individuales. Activa el <b>PI</b> y verás que ese sí las contiene. Lección: para conformidad pieza a pieza usa el <b>PI</b>, no el CI ni el R².</p>
+  </div>
+
+  <div class="block">
+    <h3>9 · R² alto, pero las piezas caen fuera del PI <span>— cuando el proceso cambia</span></h3>
+    <div class="viz">
+      <div class="cap"><div class="chartbox"><canvas id="v9"></canvas></div></div>
+      <div class="ctl">
+        <div class="row"><label>σ en producción</label><input type="range" id="v9s" min="0.55" max="2.2" step="0.05" value="0.55"><span class="val" id="v9sv">0.55</span></div>
+        <div class="key" style="width:auto;margin:0;gap:14px"><span>R² (ajuste) <b id="v9r2" style="color:#23282D">—</b></span><span>dentro PI <b id="v9pi" style="color:#23282D">—</b></span></div>
+        <button class="btn dl" data-cv="v9" data-name="r2alto-piezas-fuera-pi">Descargar PNG</button>
+        <div class="key"><span><span class="sw" style="background:rgba(26,122,94,.82)"></span>dentro del PI</span><span><span class="sw" style="background:rgba(163,45,45,.85)"></span>fuera del PI</span><span><span class="sw" style="background:rgba(199,125,26,.28)"></span>PI (validación)</span></div>
+      </div>
+    </div>
+    <div class="formula">$$ \text{PI}=\hat{y}_0\pm t\,s_{\text{val}}\sqrt{\mathbf{1}+\tfrac{1}{n}+\tfrac{(x_0-\bar{x})^{2}}{S_{xx}}}\qquad \sigma_{\text{prod}}>\sigma_{\text{val}}\;\Rightarrow\;\text{piezas fuera} $$</div>
+    <p class="explain"><b>Qué explica:</b> El PI es el intervalo correcto para juzgar piezas… <b>pero solo si el proceso sigue como cuando lo validaste</b>. Aquí el ajuste tiene <b>R² alto</b> y el PI se construyó con la variación de validación (σ pequeña). Sube <b>σ en producción</b> y verás las piezas <b>salirse del PI</b> (rojo): un R² alto no protege si la variación del proceso crece o se corre. Lección: el PI hay que <b>verificarlo y revalidarlo</b> periódicamente, no asumirlo fijo.</p>
+  </div>
+
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const P={ink:'#23282D',ci:'#2C6BAE',pi:'#C77D1A',truth:'#1A7A5E',coral:'#993C1D',
+  pt:'rgba(26,122,94,.82)',ptB:'#0F6E56',res:'rgba(153,60,29,.45)'};
+function mul(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gss(r){return function(){let u=0,v=0;while(u===0)u=r();while(v===0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};}
+function tcrit(df){const z=1.959964;return z+(z**3+z)/4/df+(5*z**5+16*z**3+3*z)/96/df/df;}
+const A0=2.0,B0=1.0;            // recta verdadera y=2+x
+function mkOpts(){return{responsive:true,maintainAspectRatio:false,animation:false,devicePixelRatio:2,
+  plugins:{legend:{display:false},tooltip:{enabled:false}},
+  scales:{x:{type:'linear',display:false,min:0.4,max:9.6},y:{type:'linear',display:false,min:-2,max:17}}};}
+const G=[];for(let i=0;i<=60;i++)G.push(0.6+9*i/60);
+
+// dataset base fijo (z estandarizados para escalar sigma suavemente)
+const Nb=22, ub=[], zb=[];
+(function(){const r=mul(7),g=gss(r);for(let i=0;i<Nb;i++){ub.push(0.8+8.4*i/(Nb-1));zb.push(g());}
+ const m=zb.reduce((a,b)=>a+b,0)/Nb;for(let i=0;i<Nb;i++)zb[i]-=m;})();
+function cloud(sig){return ub.map((x,i)=>({x,y:A0+B0*x+sig*zb[i]}));}
+function fit(pts){const n=pts.length;let mx=0,my=0;for(const p of pts){mx+=p.x;my+=p.y;}mx/=n;my/=n;
+ let Sxx=0,Sxy=0;for(const p of pts){Sxx+=(p.x-mx)**2;Sxy+=(p.x-mx)*(p.y-my);}
+ const b=Sxy/Sxx,a=my-b*mx;let sse=0;for(const p of pts){sse+=(p.y-(a+b*p.x))**2;}
+ const s=Math.sqrt(sse/(n-2)),t=tcrit(n-2);
+ return {a,b,mx,Sxx,n,s,t,yh:x=>a+b*x,ciH:x=>t*s*Math.sqrt(1/n+(x-mx)**2/Sxx),piH:x=>t*s*Math.sqrt(1+1/n+(x-mx)**2/Sxx)};}
+
+// ---------- export PNG ----------
+const charts={};
+document.querySelectorAll('.dl').forEach(b=>b.addEventListener('click',()=>{
+  const cv=document.getElementById(b.dataset.cv);
+  const tmp=document.createElement('canvas');tmp.width=cv.width;tmp.height=cv.height;
+  const x=tmp.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,tmp.width,tmp.height);x.drawImage(cv,0,0);
+  const a=document.createElement('a');a.download=b.dataset.name+'.png';a.href=tmp.toDataURL('image/png');a.click();
+}));
+
+// ===== 1: nube + residuos =====
+(function(){let ch,showRes=true;
+ function render(){const sig=+document.getElementById('v1s').value;const pts=cloud(sig);const f=fit(pts);
+  const ds=[];
+  if(showRes){const seg=[];pts.forEach(p=>{seg.push({x:p.x,y:p.y});seg.push({x:p.x,y:f.yh(p.x)});seg.push({x:null,y:null});});
+   ds.push({data:seg,type:'line',borderColor:P.res,borderWidth:1.2,pointRadius:0,fill:false,spanGaps:false});}
+  ds.push({data:[{x:0.6,y:f.yh(0.6)},{x:9.4,y:f.yh(9.4)}],type:'line',borderColor:P.ink,borderWidth:2.2,pointRadius:0,fill:false});
+  ds.push({data:pts,type:'scatter',backgroundColor:P.pt,borderColor:P.ptB,borderWidth:1,pointRadius:4});
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v1'),{data:{datasets:ds},options:mkOpts()});charts.v1=ch;}
+ document.getElementById('v1s').addEventListener('input',e=>{document.getElementById('v1sv').textContent=(+e.target.value).toFixed(1);render();});
+ document.getElementById('v1r').addEventListener('click',e=>{showRes=!showRes;e.target.classList.toggle('on',showRes);render();});
+ render();})();
+
+// ===== 2: total vs residual =====
+(function(){let ch,mode=0; // 0=recta(residual) 1=promedio(total)
+ const pts=cloud(1.6),f=fit(pts);let my=0;for(const p of pts)my+=p.y;my/=pts.length;
+ function render(){const refY=x=>mode? my : f.yh(x);
+  const seg=[];pts.forEach(p=>{seg.push({x:p.x,y:p.y});seg.push({x:p.x,y:refY(p.x)});seg.push({x:null,y:null});});
+  const refLine=mode? [{x:0.6,y:my},{x:9.4,y:my}] : [{x:0.6,y:f.yh(0.6)},{x:9.4,y:f.yh(9.4)}];
+  const ds=[{data:seg,type:'line',borderColor:'rgba(153,60,29,.5)',borderWidth:1.2,pointRadius:0,fill:false,spanGaps:false},
+   {data:refLine,type:'line',borderColor:P.ink,borderWidth:2.2,borderDash:mode?[7,5]:[],pointRadius:0,fill:false},
+   {data:pts,type:'scatter',backgroundColor:P.pt,borderColor:P.ptB,borderWidth:1,pointRadius:4}];
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v2'),{data:{datasets:ds},options:mkOpts()});charts.v2=ch;}
+ document.getElementById('v2m').addEventListener('click',e=>{mode=mode?0:1;
+  e.target.textContent=mode?'Respecto a la recta':'Respecto al promedio';e.target.classList.toggle('on',mode===1);
+  document.getElementById('v2k1').firstElementChild.style.borderStyle=mode?'dashed':'solid';render();});
+ render();})();
+
+// ===== 3: bandas CI/PI =====
+(function(){const POOL=200,pool=[],r=mul(20260622),g=gss(r);
+ for(let i=0;i<POOL;i++){const x=0.8+8.4*r();pool.push({x,z:g()});}
+ let ch,cON=true,pON=true;
+ function fitNS(n,sig){return fit(pool.slice(0,n).map(q=>({x:q.x,y:A0+B0*q.x+sig*q.z})));}
+ function render(){const n=+document.getElementById('v3n').value;const sig=+document.getElementById('v3s').value;const f=fitNS(n,sig);
+  const ds=[];
+  if(pON){ds.push({data:G.map(x=>({x,y:f.yh(x)+f.piH(x)})),type:'line',borderColor:'rgba(199,125,26,.35)',borderWidth:1,pointRadius:0,fill:false});
+   ds.push({data:G.map(x=>({x,y:f.yh(x)-f.piH(x)})),type:'line',borderColor:'rgba(199,125,26,.35)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(199,125,26,.15)'});}
+  if(cON){ds.push({data:G.map(x=>({x,y:f.yh(x)+f.ciH(x)})),type:'line',borderColor:'rgba(44,107,174,.45)',borderWidth:1,pointRadius:0,fill:false});
+   ds.push({data:G.map(x=>({x,y:f.yh(x)-f.ciH(x)})),type:'line',borderColor:'rgba(44,107,174,.45)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(44,107,174,.28)'});}
+  ds.push({data:G.map(x=>({x,y:f.yh(x)})),type:'line',borderColor:P.ink,borderWidth:2,pointRadius:0,fill:false});
+  ds.push({data:f.pts,type:'scatter',backgroundColor:P.pt,borderColor:P.ptB,borderWidth:1,pointRadius:3});
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v3'),{data:{datasets:ds},options:mkOpts()});charts.v3=ch;}
+ document.getElementById('v3n').addEventListener('input',e=>{document.getElementById('v3nv').textContent=e.target.value;render();});
+ document.getElementById('v3s').addEventListener('input',e=>{document.getElementById('v3sv').textContent=(+e.target.value).toFixed(1);render();});
+ document.getElementById('v3ci').addEventListener('click',e=>{cON=!cON;e.target.classList.toggle('on',cON);render();});
+ document.getElementById('v3pi').addEventListener('click',e=>{pON=!pON;e.target.classList.toggle('on',pON);render();});
+ render();})();
+
+// ===== 4: abanico de rectas =====
+(function(){const NE=12,seeds=[];for(let i=1;i<=80;i++)seeds.push(1000+i*37);
+ function lineFit(seed){const r=mul(seed),g=gss(r),X=[],Y=[];let sx=0,sy=0;
+  for(let i=0;i<NE;i++){const x=0.8+8.4*r();const y=A0+B0*x+2.0*g();X.push(x);Y.push(y);sx+=x;sy+=y;}
+  const mx=sx/NE,my=sy/NE;let sxx=0,sxy=0;for(let i=0;i<NE;i++){sxx+=(X[i]-mx)**2;sxy+=(X[i]-mx)*(Y[i]-my);}
+  const b=sxy/sxx,a=my-b*mx;return {a,b};}
+ const prim=fit(cloud(2.0).slice(0,NE)),pf={a:prim.a,b:prim.b};
+ let ch;
+ function render(){const K=+document.getElementById('v4k').value;
+  const ciU=G.map(x=>({x,y:prim.yh(x)+prim.ciH(x)})),ciL=G.map(x=>({x,y:prim.yh(x)-prim.ciH(x)}));
+  const ds=[{data:ciU,type:'line',borderColor:'rgba(44,107,174,.25)',borderWidth:1,pointRadius:0,fill:false},
+   {data:ciL,type:'line',borderColor:'rgba(44,107,174,.25)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(44,107,174,.14)'}];
+  for(let i=0;i<K;i++){const f=lineFit(seeds[i]);ds.push({data:[{x:0.6,y:f.a+f.b*0.6},{x:9.4,y:f.a+f.b*9.4}],type:'line',borderColor:'rgba(216,90,48,.3)',borderWidth:1,pointRadius:0,fill:false});}
+  ds.push({data:[{x:0.6,y:A0+B0*0.6},{x:9.4,y:A0+B0*9.4}],type:'line',borderColor:P.truth,borderWidth:2,borderDash:[7,5],pointRadius:0,fill:false});
+  ds.push({data:[{x:0.6,y:pf.a+pf.b*0.6},{x:9.4,y:pf.a+pf.b*9.4}],type:'line',borderColor:P.ink,borderWidth:2.4,pointRadius:0,fill:false});
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v4'),{data:{datasets:ds},options:mkOpts()});charts.v4=ch;}
+ document.getElementById('v4k').addEventListener('input',e=>{document.getElementById('v4kv').textContent=e.target.value;render();});
+ render();})();
+
+// ===== 5: CI vs PI en un punto =====
+(function(){const f=fit(cloud(1.6));let ch;
+ const piU=G.map(x=>({x,y:f.yh(x)+f.piH(x)})),piL=G.map(x=>({x,y:f.yh(x)-f.piH(x)}));
+ const ciU=G.map(x=>({x,y:f.yh(x)+f.ciH(x)})),ciL=G.map(x=>({x,y:f.yh(x)-f.ciH(x)}));
+ function render(){const x0=+document.getElementById('v5x').value;const yh=f.yh(x0),ch_=f.ciH(x0),ph=f.piH(x0);
+  const ds=[{data:piU,type:'line',borderColor:'rgba(199,125,26,.2)',borderWidth:1,pointRadius:0,fill:false},
+   {data:piL,type:'line',borderColor:'rgba(199,125,26,.2)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(199,125,26,.09)'},
+   {data:ciU,type:'line',borderColor:'rgba(44,107,174,.22)',borderWidth:1,pointRadius:0,fill:false},
+   {data:ciL,type:'line',borderColor:'rgba(44,107,174,.22)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(44,107,174,.12)'},
+   {data:G.map(x=>({x,y:f.yh(x)})),type:'line',borderColor:P.ink,borderWidth:2,pointRadius:0,fill:false},
+   {data:[{x:x0+0.14,y:yh-ph},{x:x0+0.14,y:yh+ph}],type:'line',borderColor:P.pi,borderWidth:5,pointRadius:5,pointBackgroundColor:P.pi,fill:false},
+   {data:[{x:x0-0.14,y:yh-ch_},{x:x0-0.14,y:yh+ch_}],type:'line',borderColor:P.ci,borderWidth:5,pointRadius:5,pointBackgroundColor:P.ci,fill:false},
+   {data:[{x:x0,y:yh}],type:'scatter',backgroundColor:P.ink,borderColor:'#fff',borderWidth:1.5,pointRadius:5}];
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v5'),{data:{datasets:ds},options:mkOpts()});charts.v5=ch;}
+ document.getElementById('v5x').addEventListener('input',e=>{document.getElementById('v5xv').textContent=(+e.target.value).toFixed(1);render();});
+ render();})();
+
+// ===== 6: distribución de errores (campanas) =====
+(function(){const xc=[2.5,5,7.5];let ch,sig=1.4;
+ const bell={id:'bell',afterDatasetsDraw(c){const sx=c.scales.x,sy=c.scales.y,ctx=c.ctx;
+   ctx.save();
+   xc.forEach(cx=>{const yc=A0+B0*cx;const px0=sx.getPixelForValue(cx);
+     ctx.beginPath();let first=true;
+     for(let k=-40;k<=40;k++){const yy=yc+sig*2.8*k/40;const d=Math.exp(-0.5*((yy-yc)/sig)**2);
+       const px=sx.getPixelForValue(cx+d*1.5);const py=sy.getPixelForValue(yy);
+       if(first){ctx.moveTo(px0,sy.getPixelForValue(yc-sig*2.8));first=false;}ctx.lineTo(px,py);}
+     ctx.lineTo(px0,sy.getPixelForValue(yc+sig*2.8));ctx.closePath();
+     ctx.fillStyle='rgba(44,107,174,.22)';ctx.fill();
+     ctx.strokeStyle='rgba(44,107,174,.55)';ctx.lineWidth=1.2;ctx.stroke();
+     ctx.beginPath();ctx.moveTo(px0,sy.getPixelForValue(yc-sig*2.8));ctx.lineTo(px0,sy.getPixelForValue(yc+sig*2.8));
+     ctx.strokeStyle='rgba(44,107,174,.3)';ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);});
+   ctx.restore();}};
+ function render(){const ds=[{data:[{x:0.6,y:A0+B0*0.6},{x:9.4,y:A0+B0*9.4}],type:'line',borderColor:P.ink,borderWidth:2.2,pointRadius:0,fill:false}];
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v6'),{data:{datasets:ds},options:mkOpts(),plugins:[bell]});charts.v6=ch;}
+ document.getElementById('v6s').addEventListener('input',e=>{sig=+e.target.value;document.getElementById('v6sv').textContent=sig.toFixed(1);ch.update('none');});
+ render();})();
+
+// ===== 7: R2 alto, piezas fuera del CI =====
+(function(){const r=mul(31),g=gss(r),pts=[];
+ for(let i=0;i<60;i++){const x=0.8+8.4*r();pts.push({x,y:A0+1.4*x+0.75*g()});}
+ const f=fit(pts);
+ let my=0;for(const p of pts)my+=p.y;my/=pts.length;
+ let sst=0,sse=0;for(const p of pts){sst+=(p.y-my)**2;sse+=(p.y-f.yh(p.x))**2;}
+ const r2=1-sse/sst;let inCI=0,inPI=0;
+ for(const p of pts){if(Math.abs(p.y-f.yh(p.x))<=f.ciH(p.x))inCI++;if(Math.abs(p.y-f.yh(p.x))<=f.piH(p.x))inPI++;}
+ document.getElementById('v7r2').textContent=r2.toFixed(3);
+ document.getElementById('v7ci').textContent=Math.round(100*inCI/pts.length)+'%';
+ document.getElementById('v7pi').textContent=Math.round(100*inPI/pts.length)+'%';
+ let ch,showPI=false;
+ function render(){const ds=[];
+  if(showPI){ds.push({data:G.map(x=>({x,y:f.yh(x)+f.piH(x)})),type:'line',borderColor:'rgba(199,125,26,.35)',borderWidth:1,pointRadius:0,fill:false});
+   ds.push({data:G.map(x=>({x,y:f.yh(x)-f.piH(x)})),type:'line',borderColor:'rgba(199,125,26,.35)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(199,125,26,.13)'});}
+  ds.push({data:G.map(x=>({x,y:f.yh(x)+f.ciH(x)})),type:'line',borderColor:'rgba(44,107,174,.5)',borderWidth:1,pointRadius:0,fill:false});
+  ds.push({data:G.map(x=>({x,y:f.yh(x)-f.ciH(x)})),type:'line',borderColor:'rgba(44,107,174,.5)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(44,107,174,.3)'});
+  ds.push({data:G.map(x=>({x,y:f.yh(x)})),type:'line',borderColor:P.ink,borderWidth:2,pointRadius:0,fill:false});
+  const inside=[],outside=[];pts.forEach(p=>{(Math.abs(p.y-f.yh(p.x))<=f.ciH(p.x)?inside:outside).push(p);});
+  ds.push({data:inside,type:'scatter',backgroundColor:P.pt,borderColor:P.ptB,borderWidth:1,pointRadius:3.6});
+  ds.push({data:outside,type:'scatter',backgroundColor:'rgba(163,45,45,.85)',borderColor:'#7a2020',borderWidth:1,pointRadius:3.6});
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v7'),{data:{datasets:ds},options:mkOpts()});charts.v7=ch;}
+ document.getElementById('v7p').addEventListener('click',e=>{showPI=!showPI;e.target.classList.toggle('on',showPI);render();});
+ render();})();
+
+// ===== 8: visualización de s =====
+(function(){const pool=[],r=mul(88),g=gss(r);
+ for(let i=0;i<26;i++){pool.push({x:0.8+8.4*i/25,z:g()});}
+ let mz=pool.reduce((a,q)=>a+q.z,0)/pool.length;pool.forEach(q=>q.z-=mz);
+ let ch;
+ function render(){const sig=+document.getElementById('v8s').value;
+  const pts=pool.map(q=>({x:q.x,y:A0+B0*q.x+sig*q.z}));
+  const f=fit(pts),s=f.s;
+  const band=k=>G.map(x=>({x,y:f.yh(x)+k*s}));
+  const g1=[],g2=[],g3=[];
+  pts.forEach(q=>{const e=Math.abs(q.y-f.yh(q.x));(e<=s?g1:(e<=2*s?g2:g3)).push(q);});
+  document.getElementById('v8sval').textContent=s.toFixed(2);
+  document.getElementById('v8p1').textContent=Math.round(100*g1.length/pts.length)+'%';
+  document.getElementById('v8p2').textContent=Math.round(100*(g1.length+g2.length)/pts.length)+'%';
+  const ds=[
+   {data:band(2),type:'line',borderColor:'rgba(44,107,174,.3)',borderWidth:1,pointRadius:0,fill:false},
+   {data:band(-2),type:'line',borderColor:'rgba(44,107,174,.3)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(44,107,174,.07)'},
+   {data:band(1),type:'line',borderColor:'rgba(26,122,94,.4)',borderWidth:1,borderDash:[5,4],pointRadius:0,fill:false},
+   {data:band(-1),type:'line',borderColor:'rgba(26,122,94,.4)',borderWidth:1,borderDash:[5,4],pointRadius:0,fill:'-1',backgroundColor:'rgba(26,122,94,.10)'},
+   {data:G.map(x=>({x,y:f.yh(x)})),type:'line',borderColor:P.ink,borderWidth:2,pointRadius:0,fill:false},
+   {data:g1,type:'scatter',backgroundColor:P.pt,borderColor:P.ptB,borderWidth:1,pointRadius:3.6},
+   {data:g2,type:'scatter',backgroundColor:'rgba(44,107,174,.75)',borderColor:'#1f4f86',borderWidth:1,pointRadius:3.6},
+   {data:g3,type:'scatter',backgroundColor:'rgba(163,45,45,.85)',borderColor:'#7a2020',borderWidth:1,pointRadius:3.6}];
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v8'),{data:{datasets:ds},options:mkOpts()});charts.v8=ch;}
+ document.getElementById('v8s').addEventListener('input',e=>{document.getElementById('v8sv').textContent=(+e.target.value).toFixed(1);render();});
+ render();})();
+
+// ===== 9: R2 alto, piezas fuera del PI =====
+(function(){const SA=0.55,xv=[],zv=[],r=mul(404),g=gss(r);
+ for(let i=0;i<60;i++){xv.push(0.8+8.4*r());zv.push(g());}
+ let mz=zv.reduce((a,b)=>a+b,0)/zv.length;for(let i=0;i<zv.length;i++)zv[i]-=mz;
+ const valPts=xv.map((x,i)=>({x,y:A0+B0*x+SA*zv[i]}));
+ const f=fit(valPts);
+ let my=0;for(const q of valPts)my+=q.y;my/=valPts.length;
+ let sst=0,sse=0;for(const q of valPts){sst+=(q.y-my)**2;sse+=(q.y-f.yh(q.x))**2;}
+ document.getElementById('v9r2').textContent=(1-sse/sst).toFixed(3);
+ const zp=[],rg=mul(909),gg=gss(rg);for(let i=0;i<xv.length;i++)zp.push(gg());
+ const piU=G.map(x=>({x,y:f.yh(x)+f.piH(x)})),piL=G.map(x=>({x,y:f.yh(x)-f.piH(x)}));
+ let ch;
+ function render(){const sr=+document.getElementById('v9s').value;
+  const ins=[],outs=[];let inn=0;
+  xv.forEach((x,i)=>{const y=f.yh(x)+sr*zp[i];const ok=Math.abs(y-f.yh(x))<=f.piH(x);if(ok){inn++;ins.push({x,y});}else outs.push({x,y});});
+  document.getElementById('v9pi').textContent=Math.round(100*inn/xv.length)+'%';
+  const ds=[
+   {data:piU,type:'line',borderColor:'rgba(199,125,26,.4)',borderWidth:1,pointRadius:0,fill:false},
+   {data:piL,type:'line',borderColor:'rgba(199,125,26,.4)',borderWidth:1,pointRadius:0,fill:'-1',backgroundColor:'rgba(199,125,26,.13)'},
+   {data:G.map(x=>({x,y:f.yh(x)})),type:'line',borderColor:P.ink,borderWidth:2,pointRadius:0,fill:false},
+   {data:ins,type:'scatter',backgroundColor:P.pt,borderColor:P.ptB,borderWidth:1,pointRadius:3.4},
+   {data:outs,type:'scatter',backgroundColor:'rgba(163,45,45,.85)',borderColor:'#7a2020',borderWidth:1,pointRadius:3.4}];
+  if(ch){ch.data.datasets=ds;ch.update('none');return;}
+  ch=new Chart(document.getElementById('v9'),{data:{datasets:ds},options:mkOpts()});charts.v9=ch;}
+ document.getElementById('v9s').addEventListener('input',e=>{document.getElementById('v9sv').textContent=(+e.target.value).toFixed(2);render();});
+ render();})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script>
+function fitFormulas(){
+  var boxes=document.querySelectorAll('.formula');
+  for(var i=0;i<boxes.length;i++){
+    var box=boxes[i], kd=box.querySelector('.katex-display');
+    if(!kd) continue;
+    kd.style.transform='';kd.style.transformOrigin='';kd.style.height='';
+    var avail=kd.clientWidth, natural=kd.scrollWidth;
+    if(natural>avail+1){
+      var s=avail/natural;
+      kd.style.transformOrigin='left top';
+      kd.style.transform='scale('+s+')';
+      kd.style.height=(kd.scrollHeight*s)+'px';
+    }
+  }
+}
+document.addEventListener("DOMContentLoaded",function(){
+  renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:true}],throwOnError:false,trust:true});
+  fitFormulas();
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(fitFormulas);}
+  setTimeout(fitFormulas,300);
+});
+var _rt;window.addEventListener('resize',function(){clearTimeout(_rt);_rt=setTimeout(fitFormulas,150);});
+</script>
+</body>
+</html>
