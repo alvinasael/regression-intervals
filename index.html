@@ -226,30 +226,15 @@ figcaption b{color:var(--ink);font-weight:600}
   <div class="meta">Aplicado al flujo dry-to-wet power · Construido concepto sobre concepto, con las ecuaciones explicadas desde su origen</div>
 </header>
 
-<a href="visualizaciones.html" style="display:flex;align-items:center;gap:14px;text-decoration:none;margin:22px 0 6px;padding:15px 20px;background:#F4F7FB;border:1px solid var(--rule);border-left:4px solid #2C6BAE;border-radius:12px">
-  <span style="font-size:26px;line-height:1">📈</span>
-  <span>
-    <span style="display:block;font-weight:600;color:#16324F;font-size:16px">Galería de visualizaciones para presentaciones →</span>
-    <span style="display:block;font-size:13.5px;color:#5a6b7a;margin-top:3px;line-height:1.5">9 gráficas limpias (residuos, s, R², CI, PI) listas para copiar a PowerPoint — con controles, fórmulas y descarga PNG. Página aparte.</span>
-  </span>
-</a>
-
 <section id="resumen">
   <div class="sec-num">Para quien tiene prisa</div>
   <h2>Resumen ejecutivo</h2>
   <div class="exec-panel">
     <p class="exec-intro">Los puntos que hay que entender, en orden. Cada uno enlaza a la sección donde se explica y se ilustra. Si solo lees esto, tienes el mapa completo.</p>
 
-    <div class="callout keyeq" style="margin:16px 0 6px">
-      <span class="clabel">El núcleo · un punto, dos bandas</span>
-      <p style="margin-bottom:6px">En cada dry (x₀), <b>ŷ₀</b> = el <b>wet promedio del proceso</b> (un punto sobre la recta). Lo que cambia es <em>cuánto varía</em>:</p>
-      <p style="margin-bottom:6px"><span class="cci">CI</span> = cuánto varía ese <b>promedio estimado</b> — incertidumbre de la recta, sin el “1”.</p>
-      <p style="margin-bottom:0"><span class="cpi">PI</span> = cuánto varían las <b>piezas individuales</b> — la recta <em>más</em> el reguero de cada lente. La diferencia PI − CI es <em>exactamente</em> el <span class="cpi">1</span> (= σ²).</p>
-    </div>
+    <div class="tk"><div class="tn">01</div><div class="tx"><b>La recta es una estimación, no la verdad</b> — pero representa el <b>wet promedio del proceso</b> en cada dry (x₀). Salió de una muestra finita; otra corrida de calibración daría otra recta. Todo lo demás nace de aquí.</div><a class="tref" href="#s1">§01–02</a></div>
 
-    <div class="tk"><div class="tn">01</div><div class="tx"><b>La recta es una estimación, no la verdad.</b> Salió de una muestra finita; otra corrida de calibración daría otra recta. Todo lo demás nace de aquí.</div><a class="tref" href="#s1">§01–02</a></div>
-
-    <div class="tk"><div class="tn">02</div><div class="tx"><b>Dos preguntas, dos intervalos.</b> El <span class="cci">CI</span> pregunta dónde está la recta verdadera; el <span class="cpi">PI</span>, dónde cae un lente individual.</div><a class="tref" href="#s3">§03</a></div>
+    <div class="tk"><div class="tn">02</div><div class="tx"><b>Dos preguntas, dos intervalos.</b> El <span class="cci">CI</span> = cuánto varía ese <b>promedio estimado ŷ₀</b> (dónde está la recta verdadera); el <span class="cpi">PI</span> = cuánto varían las <b>lecturas individuales</b> en x₀ (dónde cae un lente).</div><a class="tref" href="#s3">§03</a></div>
 
     <div class="tk"><div class="tn">03</div><div class="tx"><b>"La media" es condicional.</b> Es el wet promedio a un dry fijo — un corte vertical — no el promedio global de los datos. El x₀ selecciona el grupo, no es un promedio.</div><a class="tref" href="#s4">§04</a></div>
 
