@@ -240,6 +240,13 @@ figcaption b{color:var(--ink);font-weight:600}
   <div class="exec-panel">
     <p class="exec-intro">Los puntos que hay que entender, en orden. Cada uno enlaza a la sección donde se explica y se ilustra. Si solo lees esto, tienes el mapa completo.</p>
 
+    <div class="callout keyeq" style="margin:16px 0 6px">
+      <span class="clabel">El núcleo · un punto, dos bandas</span>
+      <p style="margin-bottom:6px">En cada dry (x₀), <b>ŷ₀</b> = el <b>wet promedio del proceso</b> (un punto sobre la recta). Lo que cambia es <em>cuánto varía</em>:</p>
+      <p style="margin-bottom:6px"><span class="cci">CI</span> = cuánto varía ese <b>promedio estimado</b> — incertidumbre de la recta, sin el “1”.</p>
+      <p style="margin-bottom:0"><span class="cpi">PI</span> = cuánto varían las <b>piezas individuales</b> — la recta <em>más</em> el reguero de cada lente. La diferencia PI − CI es <em>exactamente</em> el <span class="cpi">1</span> (= σ²).</p>
+    </div>
+
     <div class="tk"><div class="tn">01</div><div class="tx"><b>La recta es una estimación, no la verdad.</b> Salió de una muestra finita; otra corrida de calibración daría otra recta. Todo lo demás nace de aquí.</div><a class="tref" href="#s1">§01–02</a></div>
 
     <div class="tk"><div class="tn">02</div><div class="tx"><b>Dos preguntas, dos intervalos.</b> El <span class="cci">CI</span> pregunta dónde está la recta verdadera; el <span class="cpi">PI</span>, dónde cae un lente individual.</div><a class="tref" href="#s3">§03</a></div>
@@ -376,6 +383,14 @@ figcaption b{color:var(--ink);font-weight:600}
   </figure>
 
   <p>El ejemplo de los contadores es la prueba operacional de toda la distinción: el CI <em>no</em> sirve para juzgar piezas individuales, porque está diseñado para ser estrecho y casi nadie cae adentro. Las piezas viven dentro del PI. Guarda esta imagen; volveremos a ella al hablar de conformidad.</p>
+
+  <div class="callout keyeq">
+    <span class="clabel">En una frase · un punto, dos bandas</span>
+    <p>En ese dry (x₀), <b>ŷ₀</b> es el <b>wet promedio del proceso</b> — un punto sobre la recta. La pregunta “¿cuánto varía?” tiene dos respuestas, según de qué hables:</p>
+    <p><span class="cci">CI</span> — cuánto varía ese <b>promedio estimado ŷ₀</b>. Varía porque salió de una muestra de calibración; otra corrida habría dado una recta algo distinta. <em>No</em> lleva el “1”.</p>
+    <p><span class="cpi">PI</span> — cuánto varían las <b>lecturas individuales</b> a ese dry: el mismo temblor de la recta <em>más</em> el reguero natural de cada lente alrededor de ella.</p>
+    <p>La diferencia entre PI y CI es <em>exactamente</em> ese reguero individual — el <span class="cpi">1</span> (= σ²) que el promedio cancela pero la pieza no. <b>Mismo centro ŷ₀, dos anchos.</b></p>
+  </div>
 </section>
 
 <section id="s4">
