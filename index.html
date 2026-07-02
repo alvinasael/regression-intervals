@@ -204,6 +204,8 @@ figcaption b{color:var(--ink);font-weight:600}
       <li><a href="#s10"><span class="num">10</span><span>R² frente a s</span></a></li>
       <li><a href="#s11"><span class="num">11</span><span>Cómo mejorar el PI</span></a></li>
       <li><a href="#s12"><span class="num">12</span><span>Síntesis operativa</span></a></li>
+      <li><a href="#s13"><span class="num">13</span><span>Los cuatro usos del PI</span></a></li>
+      <li><a href="#s14"><span class="num">14</span><span>Cómo se producen escapes</span></a></li>
       <li><a href="#formulario"><span class="num">∑</span><span>Apéndice · Formulario</span></a></li>
       <li><a href="#glosario"><span class="num">Az</span><span>Apéndice · Glosario</span></a></li>
       <li><a href="visualizaciones.html"><span class="num">▦</span><span>Galería de visualizaciones</span></a></li>
@@ -668,6 +670,77 @@ figcaption b{color:var(--ink);font-weight:600}
     <p><span class="cci">Centrar el proceso</span> → mira el CI (y bajalo con n y Sₓₓ). &nbsp;·&nbsp; <span class="cpi">Juzgar piezas</span> → usa el PI punto a punto. &nbsp;·&nbsp; <span class="ctr">Estrechar el PI</span> → no junta datos, reducí σ mejorando el proceso.</p>
   </div>
   <p style="color:#5A6068;font-size:15px;margin-top:30px">Las figuras de este documento son interactivas y comparten el mismo conjunto de datos sintético (n = 14, recta verdadera wet = 2 + 1.4·dry, σ ≈ 2.4 D) para que la recta y los puntos sean los mismos a lo largo de toda la lectura.</p>
+</section>
+
+<section id="s13">
+  <div class="sec-num">13</div>
+  <h2>Los cuatro usos del PI</h2>
+  <p>El intervalo de predicción no responde una sola pregunta. Según <strong>contra qué lo compares</strong>, el mismo PI sirve para cuatro propósitos operativos distintos — y confundirlos es fácil, porque los cuatro descansan sobre la misma banda ŷ₀ ± t·s·√(1+…).</p>
+
+  <h3>1 · Validar la correlación (desarrollo)</h3>
+  <p>Comparas el PI contra un <strong>test set independiente</strong> (datos que no se usaron para ajustar la recta). Si la <strong>cobertura ≈ 95%</strong> —~95% de los puntos caen dentro y ~5% afuera—, el modelo predice honestamente la pieza: capturó bien el centro y σ. Esto valida el <span class="cpi">modelo</span>. Es cobertura cercana al nominal, no "todos adentro", y el test debe cubrir todo el rango.</p>
+
+  <h3>2 · Evaluar una población nueva contra la modelada</h3>
+  <p>Aquí el PI queda <em>congelado</em> como referencia (el σ del modelo) y comparas contra él la variabilidad <strong>real</strong> de un lote o población nueva. Si la población nueva empieza a caer fuera del PI más del ~5%, o si su S observado supera al S·y·x del modelo (prueba F, s²ₙ/s²ᵥ), esa población es <strong>más variable que la modelada</strong>: el proceso cambió o el material es distinto. El PI te da la vara para decir "esto ya no se parece a lo que calibré".</p>
+
+  <h3>3 · Evaluar el proceso contra la especificación</h3>
+  <p>Comparas el ancho del PI (±~2·S·y·x) contra la <strong>ventana de spec</strong> (USL−LSL): ¿cabe con holgura? Esto valida la <span class="ctr">capacidad</span> y decide si puedes confiar en la predicción para aceptar o rechazar. Si el PI no cabe en spec, la correlación puede ser perfecta y aun así vas a tener escapes.</p>
+
+  <h3>4 · Guard-band pieza a pieza (predicción operativa)</h3>
+  <p>Cuando ya usas la correlación en el día a día, el PI define la <strong>holgura pieza a pieza</strong>: en cada lectura, el ±2·S·y·x te dice cuánto margen exigir contra spec antes de aceptar. Es el uso 3 llevado del "¿es capaz el proceso?" al "¿acepto esta pieza?".</p>
+
+  <div class="callout keyeq">
+    <span class="clabel">Contra qué comparas el PI en cada uso</span>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Comparas el PI contra…</th><th>Qué valida</th><th>Métrica</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>el test set (independiente)</td><td>el modelo es honesto</td><td>cobertura ≈ 95%</td></tr>
+        <tr><td>2</td><td>una población nueva</td><td>la población ≈ la modelada</td><td>cobertura + S vs S·y·x (F)</td></tr>
+        <tr><td>3</td><td>la ventana de spec</td><td>el proceso es capaz</td><td>2·ME_PI vs USL−LSL</td></tr>
+        <tr><td>4</td><td>cada lectura, en operación</td><td>si acepto esta pieza</td><td>ŷ ± 2·S·y·x vs spec</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout note">
+    <span class="clabel">Dos distinciones que los amarran</span>
+    <p><strong>1 y 2 son la misma prueba en momentos distintos.</strong> En desarrollo validas el modelo una vez (1); en producción repites esa validación contra cada población nueva (2). El referente es el mismo PI; lo que cambia es quién está "a prueba": en (1), el modelo; en (2), el proceso. Por eso (2) es tu re-validación continua.</p>
+    <p><strong>1–2 validan el modelo/proceso; 3 valida contra el cliente.</strong> Son independientes: puedes pasar (1) y (2) —un modelo honesto sobre un proceso estable— y aun así fallar (3) si σ es grande frente al spec. <span class="cpi">"Correlación buena"</span> = el test cae dentro del PI; <span class="ctr">"proceso capaz"</span> = el PI cabe en el spec. No confundas una con la otra.</p>
+  </div>
+</section>
+
+<section id="s14">
+  <div class="sec-num">14</div>
+  <h2>Cómo se producen escapes</h2>
+  <p>El escape del uso 3 es traicionero: ocurre <strong>incluso con el modelo perfectamente válido y el proceso perfectamente centrado</strong>. No es un error de nadie — es geometría. Si el PI es más ancho que la ventana de spec, las colas de la distribución de la pieza sobresalen del spec, y esas colas son piezas reales fuera de tolerancia que tu predicción puntual no ve.</p>
+
+  <h3>El mecanismo base</h3>
+  <p>Decides con el <strong>punto</strong> (mides dry, calculas ŷ, comparas ŷ contra spec), pero la pieza real no cae en ŷ: cae en algún lugar del <span class="cpi">PI</span> (±~2·S·y·x). Si ŷ está dentro de spec pero cerca del borde, la pieza real puede aterrizar del otro lado. El punto dijo "pasa"; la pieza dice "no". Ese hueco entre el punto y el ancho del PI es la fuente del escape.</p>
+
+  <h3>Las cuatro formas en que aparece</h3>
+  <p><strong>1 · σ demasiado grande (estructural).</strong> Si 2·ME_PI &gt; (USL−LSL), el PI no cabe en la ventana pase lo que pase. Aun centrado perfecto, ambas colas se salen. Es un piso de rechazo que <strong>no baja centrando</strong> — solo reduciendo S·y·x (mejorando el proceso).</p>
+  <p><strong>2 · Descentrado de la media (corregible).</strong> Si la media se corre del target, una cola crece rápido. El PI cabía, pero al moverse el centro un lado se asoma del spec. Este sí se arregla <span class="cci">recentrando</span>.</p>
+  <p><strong>3 · Guard-band insuficiente (de decisión).</strong> Si aceptas cuando ŷ está dentro de spec pero no exiges holgura ≥ el semi-ancho del PI, admites piezas cuyo predicho está a milésimas del límite mientras el PI se extiende mucho más. El remedio es la ventana de aceptación reducida (spec − ME_PI).</p>
+  <p><strong>4 · PI subestimado (invisible).</strong> El peor, porque no lo ves venir: si el S·y·x del modelo es más chico que la variabilidad real —por sobreajuste en desarrollo, o porque el proceso derivó y creció σ— tu PI es más angosto que la realidad. Crees que las colas caben; en verdad las piezas se riegan más y se salen. Aquí los usos <strong>1 y 2</strong> (validar el modelo, monitorear poblaciones) son los que te protegen.</p>
+
+  <div class="callout keyeq">
+    <span class="clabel">Ejemplo · spec ±0.25 D, proceso centrado salvo donde se indique</span>
+    <table class="tbl">
+      <thead><tr><th>Situación</th><th>Ancho del PI (±2s)</th><th>Escape</th><th>Caso</th></tr></thead>
+      <tbody>
+        <tr><td>S·y·x = 0.08 D</td><td>±0.16 (cabe)</td><td>~0.2%</td><td>mínimo</td></tr>
+        <tr><td>S·y·x = 0.15 D</td><td>±0.30 &gt; 0.25</td><td>~9.6% aun centrado</td><td>1 · estructural</td></tr>
+        <tr><td>S·y·x = 0.08, media en +0.12</td><td>±0.16</td><td>~5% (una cola)</td><td>2 · corregible</td></tr>
+        <tr><td>S·y·x real 0.15, modelaste 0.08</td><td>crees ±0.16, es ±0.30</td><td>~9.6% "invisible"</td><td>4 · subestimado</td></tr>
+      </tbody>
+    </table>
+    <p class="eqnote">En el último renglón crees estar en el primero (~0.2%) y en verdad estás en el segundo (~9.6%): el PI subestimado esconde el escape.</p>
+  </div>
+
+  <div class="callout caution">
+    <span class="clabel">En una frase</span>
+    <p>El escape nace cuando el ancho real de la pieza (2·S·y·x) <strong>no cabe con holgura</strong> en la ventana de spec — por σ grande (1), centro corrido (2), falta de guard-band (3) o creer un σ menor que el real (4). Los dos primeros son de capacidad/centrado; los dos últimos, de disciplina en cómo usas el PI.</p>
+  </div>
 </section>
 
 <section id="formulario">
