@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Axis Pipeline — Visualizing the 4 Steps (v2: narrated step 4)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F6F1; --panel:#FFFFFF; --ink:#1B2A41; --ink2:#4A5A70;
+  --grid:#DCD9CF; --hair:#C9C5B8;
+  --r1:#2F5D8A; --r2:#4E7DAB; --r3:#7099C2;
+  --amber:#B8860B; --amberbg:#FBF3DF;
+  --target:#2E7D5B; --targetbg:#E4F0EA;
+  --fail:#B3402E; --failbg:#F7E4E0;
+  --pass:#2E7D5B;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+body{background:var(--paper); color:var(--ink); font-family:'IBM Plex Sans',system-ui,sans-serif; padding:28px 20px 60px}
+.wrap{max-width:1180px; margin:0 auto}
+header{border-bottom:2px solid var(--ink); padding-bottom:18px; margin-bottom:22px}
+.eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink2)}
+h1{font-size:clamp(22px,3.4vw,32px); font-weight:700; letter-spacing:-.01em; margin-top:6px}
+h1 .thin{font-weight:400; color:var(--ink2)}
+.controls{display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; background:var(--panel); border:1px solid var(--hair); padding:16px 18px; margin-bottom:26px}
+.ctl label{display:block; font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink2); margin-bottom:5px}
+.ctl input, .ctl select{font-family:'IBM Plex Mono',monospace; font-size:16px; padding:7px 10px; border:1.5px solid var(--ink); background:var(--paper); color:var(--ink); width:96px}
+.ctl input:focus, .ctl select:focus{outline:2px solid var(--amber); outline-offset:1px}
+.presets{display:flex; flex-wrap:wrap; gap:8px; margin-left:auto}
+.presets button{font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:8px 12px; border:1.5px solid var(--ink); background:var(--panel); color:var(--ink); cursor:pointer; transition:background .15s}
+.presets button:hover{background:var(--amberbg)}
+.presets button:focus-visible{outline:2px solid var(--amber); outline-offset:1px}
+.grid{display:grid; grid-template-columns:1fr 1fr; gap:22px}
+@media (max-width:860px){ .grid{grid-template-columns:1fr} .presets{margin-left:0} }
+.step{background:var(--panel); border:1px solid var(--hair); position:relative}
+.step-head{display:flex; align-items:baseline; gap:12px; padding:14px 18px 10px; border-bottom:1px solid var(--grid)}
+.step-num{font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:600; color:var(--amber); line-height:1}
+.step-title{font-size:16px; font-weight:600}
+.step-q{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink2); font-style:italic}
+.viz{padding:8px 10px 0}
+svg{display:block; width:100%; height:auto}
+.readout{display:flex; flex-wrap:wrap; gap:8px 20px; padding:10px 18px 14px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--ink2); border-top:1px dashed var(--grid)}
+.readout b{color:var(--ink); font-weight:600}
+.readout .amber{color:var(--amber); font-weight:600}
+.readout .green{color:var(--target); font-weight:600}
+.readout .red{color:var(--fail); font-weight:600}
+.formula{padding:0 18px 14px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink2); white-space:nowrap; overflow-x:auto}
+.verdict{display:inline-block; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px; padding:3px 12px; border:1.5px solid}
+.verdict.pass{color:var(--pass); border-color:var(--pass); background:var(--targetbg)}
+.verdict.fail{color:var(--fail); border-color:var(--fail); background:var(--failbg)}
+.legend{display:flex; flex-wrap:wrap; gap:14px; padding:10px 18px 0; font-size:11.5px; color:var(--ink2)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.sw{width:18px; height:3px; display:inline-block}
+footer{margin-top:26px; font-size:12px; color:var(--ink2); border-top:1px solid var(--hair); padding-top:12px; font-family:'IBM Plex Mono',monospace}
+@media (prefers-reduced-motion: no-preference){
+  .anim{transition: all .45s cubic-bezier(.4,0,.2,1)}
+}
+
+.opener{padding:10px 18px 2px; font-size:13.5px; line-height:1.5; color:var(--ink2)}
+.opener b{color:var(--ink)}
+.trace{display:grid; grid-template-columns:auto 1fr; gap:3px 12px; align-items:baseline}
+.trace .verb{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--amber); font-weight:600}
+.whywin{padding:0 18px 14px; font-size:12px; font-style:italic; color:var(--ink2); line-height:1.5}
+.cmp{display:grid; grid-template-columns:auto auto; gap:3px 14px; justify-content:start; align-items:baseline; width:100%}
+.cmp .val{font-weight:600; font-variant-numeric:tabular-nums}
+</style>
+
+<style id="axis-nav-css">
+body>.axis-nav:first-child{margin:-28px -20px 22px}
+.axis-nav{position:sticky;top:0;z-index:999;display:flex;flex-wrap:wrap;align-items:center;gap:4px;
+  padding:9px 18px;margin:0 0 0 0;background:rgba(252,251,247,.94);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--hair,#D8D4C8);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;letter-spacing:.06em}
+.axis-nav .axis-brand{font-weight:600;text-transform:uppercase;letter-spacing:.18em;
+  color:var(--ink2,#5A6A80);margin-right:14px;white-space:nowrap}
+.axis-nav a{display:inline-block;padding:5px 11px;text-decoration:none;color:var(--ink2,#5A6A80);
+  border:1px solid transparent;border-radius:3px;transition:background .15s,color .15s;white-space:nowrap}
+.axis-nav a:hover{background:var(--amberbg,#F6ECD4);color:var(--ink,#1B2A41)}
+.axis-nav a.on{color:var(--amber,#B8860B);border-color:var(--amber,#B8860B);font-weight:600;cursor:default}
+.axis-nav .axis-home{margin-left:auto;font-style:normal;opacity:.75}
+@media(max-width:640px){.axis-nav{font-size:10.5px;padding:8px 12px}.axis-nav .axis-home{margin-left:0}}
+</style></head>
+<body>
+<nav class="axis-nav"><span class="axis-brand">Cálculo del Axis</span><a href="axis.html" title="Los 4 pasos">Resumen</a><a href="axis-articulo.html" title="Artículo técnico">Artículo</a><a href="#" class="on" title="Visualización interactiva">Visual</a><a class="axis-home" href="https://alvinasael.github.io/home/">← Project Hub</a></nav>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Metrology · Toric axis · mod 180°</div>
+  <h1>The 4 steps of the axis calculation <span class="thin">— in angles and vectors</span></h1>
+</header>
+
+<div class="controls">
+  <div class="ctl"><label for="target">Target</label>
+    <select id="target"></select></div>
+  <div class="ctl"><label for="l1">Reading 1</label><input id="l1" type="number" step="0.1" min="0" max="179.9" value="175"></div>
+  <div class="ctl"><label for="l2">Reading 2</label><input id="l2" type="number" step="0.1" min="0" max="179.9" value="5"></div>
+  <div class="ctl"><label for="l3">Reading 3</label><input id="l3" type="number" step="0.1" min="0" max="179.9" value="10"></div>
+  <div class="presets" role="group" aria-label="Preset cases">
+    <button data-c="90,88.8,90.4,91.5">In spec T=90</button>
+    <button data-c="180,178.8,0.4,1.5">Straddle 0/180</button>
+    <button data-c="30,39.1,40.6,41.3">Mix 10°</button>
+    <button data-c="50,178.8,0.4,1.5">Mix, dead zone</button>
+    <button data-c="50,138.8,140.4,141.5">Sibling SKU</button>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- PASO 1 -->
+  <section class="step" aria-label="Step 1: Readings">
+    <div class="step-head"><span class="step-num">1</span><span class="step-title">Readings</span><span class="step-q">what did the instrument say?</span></div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--r1)"></span>L1</span>
+      <span><span class="sw" style="background:var(--r2)"></span>L2</span>
+      <span><span class="sw" style="background:var(--r3)"></span>L3</span>
+      <span><span class="sw" style="background:var(--target)"></span>Target</span>
+    </div>
+    <div class="viz"><svg id="svg1" viewBox="0 0 520 300" role="img" aria-label="Semicircle with the three readings drawn as axes"></svg></div>
+    <div class="readout" id="ro1"></div>
+  </section>
+
+  <!-- PASO 2 -->
+  <section class="step" aria-label="Step 2: Axis Mean">
+    <div class="step-head"><span class="step-num">2</span><span class="step-title">Axis Mean</span><span class="step-q">what axis does the lens actually have?</span></div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--r1)"></span>2θ arrows (tip to tail)</span>
+      <span><span class="sw" style="background:var(--amber)"></span>sum → ATAN2 → ÷2</span>
+    </div>
+    <div class="viz"><svg id="svg2" viewBox="0 0 520 300" role="img" aria-label="Doubled-world circle with the vector sum, and semicircle with the mean axis"></svg></div>
+    <div class="readout" id="ro2"></div>
+    <div class="formula">=MOD(DEGREES(ATAN2(Σcos(2θ), Σsin(2θ)))/2, 180)</div>
+  </section>
+
+  <!-- PASO 3 -->
+  <section class="step" aria-label="Step 3: Circular Deviation">
+    <div class="step-head"><span class="step-num">3</span><span class="step-title">Circular Deviation</span><span class="step-q">how far is it from the target?</span></div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--target)"></span>Target ± 5°</span>
+      <span><span class="sw" style="background:var(--amber)"></span>Axis Mean</span>
+      <span><span class="sw" style="background:var(--fail)"></span>short path (dev)</span>
+      <span><span class="sw" style="background:var(--hair); border-bottom:1px dashed var(--ink2)"></span>long path (discarded)</span>
+    </div>
+    <div class="viz"><svg id="svg3" viewBox="0 0 520 300" role="img" aria-label="Semicircle with target, mean axis, and the short-path arc"></svg></div>
+    <div class="readout" id="ro3"></div>
+    <div class="formula">=IF(MOD(I−C+90,180)−90=−90, 90, MOD(I−C+90,180)−90)</div>
+  </section>
+
+  <!-- PASO 4 -->
+  <section class="step" aria-label="Step 4: Value sent to the end system">
+    <div class="step-head"><span class="step-num">4</span><span class="step-title">Final Results</span><span class="step-q">how do I report it? — same axis, different name</span></div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--amberbg); border:1px solid var(--amber)"></span>window [5, 185)</span>
+      <span><span class="sw" style="background:var(--targetbg); border:1px solid var(--target)"></span>product limits T±5</span>
+      <span><span class="sw" style="background:var(--amber); border-radius:50%; width:10px; height:10px"></span>reported value</span>
+      <span><span class="sw" style="background:#fff; border:1.5px dashed var(--ink2); border-radius:50%; width:10px; height:10px"></span>congruent name (±180)</span>
+    </div>
+    <div class="opener">The axis scale completes a full turn every 180°, so an angle outside the interval shown below looks odd; that is why adding or subtracting 180 changes the name — never the axis.</div>
+    <div style="display:none">
+    </div>
+    <div class="viz"><svg id="svg4" viewBox="0 0 520 300" role="img" aria-label="Number line with the reporting window and the fold"></svg></div>
+    <div class="readout" id="ro4"></div>
+    <div class="formula">=IF((C+K)&gt;=185,(C+K)−180, IF((C+K)&lt;5,(C+K)+180,(C+K)))</div>
+    <div class="whywin">The folded value is sent to the <b>end system</b>: that is where the official result resides and where the PASS/FAIL decision is made. Why [5, 185)? Every good lens lives there: targets 10 through 180, deviation ±5. It’s the only 180-wide window that cuts none of them — and the one that preserves the 181, 182… convention for the 180 SKU.</div>
+  </section>
+
+</div>
+
+<footer>All four steps share a single building block: “fold this onto the short path.” In step 2 the vector sum does it; in step 3, MOD arithmetic; in step 4, the same fold but onto the reporting window.</footer>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const C={ink:css('--ink'),ink2:css('--ink2'),grid:css('--grid'),hair:css('--hair'),
+ r:[css('--r1'),css('--r2'),css('--r3')],amber:css('--amber'),amberbg:css('--amberbg'),
+ target:css('--target'),targetbg:css('--targetbg'),fail:css('--fail')};
+
+// ---------- pipeline math ----------
+const rad=d=>d*Math.PI/180, deg=r=>r*180/Math.PI;
+const wrap=d=>{let w=((d+90)%180+180)%180-90; return w===-90?90:w;};
+function pipeline(T,reads){
+  const sc=reads.reduce((s,x)=>s+Math.cos(rad(2*x)),0);
+  const ss=reads.reduce((s,x)=>s+Math.sin(rad(2*x)),0);
+  const am=((deg(Math.atan2(ss,sc))/2)%180+180)%180;
+  const dev=wrap(am-T);
+  const raw=T+dev;
+  const folded=raw>=185?raw-180:(raw<5?raw+180:raw);
+  return {sc,ss,am,dev,raw,folded,pass:Math.abs(dev)<=5};
+}
+
+// ---------- SVG helpers ----------
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);
+  for(const k in attrs)e.setAttribute(k,attrs[k]); if(parent)parent.appendChild(e); return e;}
+function txt(parent,x,y,s,attrs={}){const e=el('text',Object.assign({x,y,'font-family':"'IBM Plex Mono',monospace",'font-size':11,fill:C.ink2},attrs),parent); e.textContent=s; return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+
+// semicircle: axis angle 0..180, 0° at right, counterclockwise
+function semi(svg,cx,cy,R){
+  el('path',{d:`M ${cx-R} ${cy} A ${R} ${R} 0 0 1 ${cx+R} ${cy}`,fill:'none',stroke:C.ink,'stroke-width':1.5},svg);
+  el('line',{x1:cx-R-8,y1:cy,x2:cx+R+8,y2:cy,stroke:C.ink,'stroke-width':1.5},svg);
+  for(let a=0;a<=180;a+=10){
+    const t=a%30===0?9:5;
+    const x1=cx+R*Math.cos(rad(a)),y1=cy-R*Math.sin(rad(a));
+    const x2=cx+(R-t)*Math.cos(rad(a)),y2=cy-(R-t)*Math.sin(rad(a));
+    el('line',{x1,y1,x2,y2,stroke:a%30===0?C.ink:C.grid,'stroke-width':1},svg);
+    if(a%30===0){const xr=cx+(R+16)*Math.cos(rad(a)),yr=cy-(R+16)*Math.sin(rad(a));
+      txt(svg,xr,yr+4,a+'°',{'text-anchor':'middle','font-size':10});}
+  }
+}
+function axisLine(svg,cx,cy,R,ang,color,w,dash){
+  const x1=cx+R*Math.cos(rad(ang)),y1=cy-R*Math.sin(rad(ang));
+  const x2=cx-R*Math.cos(rad(ang)),y2=cy+R*Math.sin(rad(ang));
+  // on the semicircle show the upper half + a short tail below
+  const a={x1:cx,y1:cy,x2:x1,y2:y1,stroke:color,'stroke-width':w,class:'anim'};
+  if(dash)a['stroke-dasharray']=dash;
+  el('line',a,svg);
+  el('line',{x1:cx,y1:cy,x2:cx-0.18*R*Math.cos(rad(ang)),y2:cy+0.18*R*Math.sin(rad(ang)),stroke:color,'stroke-width':w,opacity:.45},svg);
+}
+
+// ---------- PASO 1 ----------
+function draw1(T,reads,P){
+  const svg=$('svg1'); clear(svg);
+  const cx=260,cy=250,R=195;
+  // tolerance band
+  const a1=Math.max(0,T-5),a2=Math.min(180,T+5);
+  const p1x=cx+R*Math.cos(rad(a2)),p1y=cy-R*Math.sin(rad(a2));
+  const p2x=cx+R*Math.cos(rad(a1)),p2y=cy-R*Math.sin(rad(a1));
+  el('path',{d:`M ${cx} ${cy} L ${p1x} ${p1y} A ${R} ${R} 0 0 1 ${p2x} ${p2y} Z`,fill:C.targetbg,stroke:'none'},svg);
+  semi(svg,cx,cy,R);
+  axisLine(svg,cx,cy,R,T,C.target,2.5);
+  reads.forEach((L,i)=>axisLine(svg,cx,cy,R*0.92,L,C.r[i],2));
+  txt(svg,cx+ (R+34)*Math.cos(rad(T)), cy-(R+34)*Math.sin(rad(T))+4, 'T='+T,{fill:C.target,'font-weight':600,'text-anchor':'middle'});
+  $('ro1').innerHTML=`L1 <b>${reads[0].toFixed(1)}°</b> · L2 <b>${reads[1].toFixed(1)}°</b> · L3 <b>${reads[2].toFixed(1)}°</b> · <span class="green">green band = Target ± 5°</span>`;
+}
+
+// ---------- PASO 2 ----------
+function draw2(T,reads,P){
+  const svg=$('svg2'); clear(svg);
+  // left: doubled world (full circle)
+  const cx=135,cy=150,R=108;
+  txt(svg,cx,26,'doubled world (×2)',{'text-anchor':'middle','font-size':11,fill:C.ink,'font-weight':600});
+  el('circle',{cx,cy,r:R,fill:'none',stroke:C.ink,'stroke-width':1.2},svg);
+  [0,90,180,270].forEach(a=>{
+    el('line',{x1:cx+(R-6)*Math.cos(rad(a)),y1:cy-(R-6)*Math.sin(rad(a)),x2:cx+R*Math.cos(rad(a)),y2:cy-R*Math.sin(rad(a)),stroke:C.ink,'stroke-width':1},svg);
+    txt(svg,cx+(R+14)*Math.cos(rad(a)),cy-(R+14)*Math.sin(rad(a))+4,a+'°',{'text-anchor':'middle','font-size':9});
+  });
+  // tip-to-tail arrows, each of length R/3
+  const uv=reads.map(L=>[Math.cos(rad(2*L)),Math.sin(rad(2*L))]);
+  let px=cx,py=cy; const seg=R/3*0.94;
+  const mk=(id,color)=>{const m=el('marker',{id,markerWidth:8,markerHeight:8,refX:6,refY:3,orient:'auto'},svg);
+    el('path',{d:'M0,0 L7,3 L0,6 Z',fill:color},m);};
+  const defs=el('defs',{},svg);
+  ['a0','a1','a2','asum'].forEach((id,i)=>{const m=el('marker',{id,markerWidth:8,markerHeight:8,refX:6,refY:3,orient:'auto'},defs);
+    el('path',{d:'M0,0 L7,3 L0,6 Z',fill:i<3?C.r[i]:C.amber},m);});
+  uv.forEach((v,i)=>{
+    const nx=px+seg*v[0], ny=py-seg*v[1];
+    el('line',{x1:px,y1:py,x2:nx,y2:ny,stroke:C.r[i],'stroke-width':2.4,'marker-end':`url(#a${i})`,class:'anim'},svg);
+    px=nx; py=ny;
+  });
+  el('line',{x1:cx,y1:cy,x2:px,y2:py,stroke:C.amber,'stroke-width':3,'marker-end':'url(#asum)',class:'anim'},svg);
+  txt(svg,cx,cy+R+30,`ATAN2 → ${(deg(Math.atan2(P.ss,P.sc))+360)%360<360?(((deg(Math.atan2(P.ss,P.sc)))%360+360)%360).toFixed(1):''}°  (=2θ)`,{'text-anchor':'middle','font-size':10.5,fill:C.amber,'font-weight':600});
+  // transition arrow
+  txt(svg,262,150,'÷2',{'text-anchor':'middle','font-size':15,fill:C.ink,'font-weight':700});
+  el('path',{d:'M 246 162 L 282 162',stroke:C.ink,'stroke-width':1.4,'marker-end':'url(#asum)'},svg);
+  // right: semicircle with the result
+  const cx2=400,cy2=214,R2=96;
+  txt(svg,cx2,26,'real world (÷2)',{'text-anchor':'middle','font-size':11,fill:C.ink,'font-weight':600});
+  semi(svg,cx2,cy2,R2);
+  axisLine(svg,cx2,cy2,R2,P.am,C.amber,3);
+  txt(svg,cx2,cy2+42,`Axis Mean = ${P.am.toFixed(2)}°`,{'text-anchor':'middle',fill:C.amber,'font-weight':600,'font-size':12});
+  $('ro2').innerHTML=`Σcos(2θ) <b>${P.sc.toFixed(3)}</b> · Σsin(2θ) <b>${P.ss.toFixed(3)}</b> · <span class="amber">Axis Mean = ${P.am.toFixed(4)}°</span>`;
+}
+
+// ---------- PASO 3 ----------
+function draw3(T,reads,P){
+  const svg=$('svg3'); clear(svg);
+  const cx=260,cy=250,R=195;
+  const a1=Math.max(0,T-5),a2=Math.min(180,T+5);
+  const p1x=cx+R*Math.cos(rad(a2)),p1y=cy-R*Math.sin(rad(a2));
+  const p2x=cx+R*Math.cos(rad(a1)),p2y=cy-R*Math.sin(rad(a1));
+  el('path',{d:`M ${cx} ${cy} L ${p1x} ${p1y} A ${R} ${R} 0 0 1 ${p2x} ${p2y} Z`,fill:C.targetbg},svg);
+  semi(svg,cx,cy,R);
+  axisLine(svg,cx,cy,R,T,C.target,2.5);
+  axisLine(svg,cx,cy,R*0.92,P.am,C.amber,3);
+  // short-path arc on the axis scale (note: dev on the axis = angular travel; the axis is mod 180)
+  const naive=P.am-T;
+  const arcR=R*0.62;
+  // short path: from T to T+dev (in axis space; may cross 0/180)
+  function arcPath(from,to,r){
+    // draw in small steps, honoring the mod-180 crossing shown as a jump across the diameter
+    const N=40, pts=[];
+    for(let i=0;i<=N;i++){
+      let a=from+(to-from)*i/N;
+      let am=((a%180)+180)%180;
+      pts.push([cx+r*Math.cos(rad(am)),cy-r*Math.sin(rad(am))]);
+    }
+    return 'M '+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L ');
+  }
+  el('path',{d:arcPath(T,T+P.dev,arcR),fill:'none',stroke:C.fail,'stroke-width':2.6,class:'anim'},svg);
+  // long path (when the naive difference differs from dev)
+  if(Math.abs(Math.abs(naive)-Math.abs(P.dev))>0.01){
+    el('path',{d:arcPath(T,T+naive,arcR*0.82),fill:'none',stroke:C.ink2,'stroke-width':1.4,'stroke-dasharray':'5 5',opacity:.55},svg);
+    const mid=T+naive/2, mm=((mid%180)+180)%180;
+    txt(svg,cx+(arcR*0.82-18)*Math.cos(rad(mm)),cy-(arcR*0.82-18)*Math.sin(rad(mm)),`${naive>0?'+':''}${naive.toFixed(1)}° ✗`,{'text-anchor':'middle','font-size':10,fill:C.ink2});
+  }
+  const mid2=T+P.dev/2, mm2=((mid2%180)+180)%180;
+  txt(svg,cx+(arcR+20)*Math.cos(rad(mm2)),cy-(arcR+20)*Math.sin(rad(mm2)),`dev = ${P.dev>0?'+':''}${P.dev.toFixed(2)}°`,{'text-anchor':'middle','font-size':12,fill:C.fail,'font-weight':600});
+  $('ro3').innerHTML=`<div class="cmp"><span>Direct subtraction (incorrect) :</span><span class="val"><b>${naive.toFixed(2)}°</b></span><span>Short-path subtraction (correct) :</span><span class="val red">${P.dev>0?'+':''}${P.dev.toFixed(2)}°</span></div>`;
+}
+
+// ---------- PASO 4 ----------
+function draw4(T,reads,P){
+  const svg=$('svg4'); clear(svg);
+  const x0=44,x1=498,y=158, MIN=-80,MAX=270;
+  const X=v=>x0+(v-MIN)/(MAX-MIN)*(x1-x0);
+  el('rect',{x:X(5),y:y-52,width:X(185)-X(5),height:104,fill:C.amberbg,stroke:C.amber,'stroke-width':1.4},svg);
+  txt(svg,(X(5)+X(185))/2,y-62,'window [5, 185): picks ONE name',{'text-anchor':'middle',fill:C.amber,'font-weight':600});
+  el('rect',{x:X(T-5),y:y-26,width:X(T+5)-X(T-5),height:52,fill:C.targetbg,stroke:C.target,'stroke-width':1},svg);
+  el('line',{x1:X(T),y1:y-26,x2:X(T),y2:y+26,stroke:C.target,'stroke-width':1.6},svg);
+  txt(svg,X(T),y-33,'T\u00b15',{'text-anchor':'middle',fill:C.target,'font-size':9.5,'font-weight':600});
+  el('line',{x1:x0,y1:y,x2:x1,y2:y,stroke:C.ink,'stroke-width':1.5},svg);
+  [0,90,180,270].forEach(v=>{
+    el('line',{x1:X(v),y1:y-4,x2:X(v),y2:y+4,stroke:C.ink2,'stroke-width':1},svg);
+    txt(svg,X(v),y+16,v,{'text-anchor':'middle','font-size':8.5});
+  });
+  [5,185].forEach(v=>el('line',{x1:X(v),y1:y-8,x2:X(v),y2:y+8,stroke:C.amber,'stroke-width':1.6},svg));
+  const raw=P.raw, fol=P.folded;
+  const copies=[raw-180,raw,raw+180].filter(v=>v>=MIN-1&&v<=MAX+1);
+  let chosenX=X(fol);
+  copies.forEach(v=>{
+    const chosen=Math.abs(v-fol)<0.001;
+    if(chosen){
+      el('circle',{cx:X(v),cy:y,r:7,fill:C.amber,class:'anim'},svg);
+      el('circle',{cx:X(v),cy:y,r:11.5,fill:'none',stroke:C.amber,'stroke-width':1.6,class:'anim'},svg);
+      txt(svg,X(v),y+34,v.toFixed(2),{'text-anchor':'middle','font-size':11,fill:C.amber,'font-weight':600});
+    }else{
+      el('circle',{cx:X(v),cy:y,r:6,fill:'#fff',stroke:C.ink2,'stroke-width':1.6,'stroke-dasharray':'3 2',class:'anim'},svg);
+      txt(svg,X(v),y+34,v.toFixed(2),{'text-anchor':'middle','font-size':10,fill:C.ink2});
+      const d=fol>v?'+180':'\u2212180';
+      el('path',{d:`M ${X(v)} ${y+44} C ${X(v)} ${y+84}, ${chosenX} ${y+84}, ${chosenX} ${y+44}`,fill:'none',stroke:C.ink2,'stroke-width':1.3,'stroke-dasharray':'5 4',class:'anim'},svg);
+      txt(svg,(X(v)+chosenX)/2,y+96,d,{'text-anchor':'middle','font-size':11,fill:C.ink2,'font-weight':600});
+    }
+  });
+  txt(svg,(x0+x1)/2,y+112,'the ghost dots are the same axis under another name:',{'text-anchor':'middle','font-size':10});
+  txt(svg,(x0+x1)/2,y+126,'the window doesn\'t move the value — it picks which name gets written',{'text-anchor':'middle','font-size':10});
+  const lim=`[${(T-5)}, ${(T+5)}]`;
+  const v=P.pass?'<span class="verdict pass">PASS</span>':'<span class="verdict fail">FAIL</span>';
+  if(Math.abs(fol-raw)>0.001){
+    $('ro4').innerHTML=`<div class="trace"><span class="verb">compose</span><span>Target ${T} + dev (${P.dev>0?'+':''}${P.dev.toFixed(2)}) = <b>${raw.toFixed(2)}</b></span><span class="verb">rename</span><span>${raw.toFixed(2)} falls outside [5, 185) \u2192 ${raw.toFixed(2)} ${fol>raw?'+ 180':'\u2212 180'} = <span class="amber">${fol.toFixed(2)}</span></span><span class="verb">judge</span><span>the end system compares ${fol.toFixed(2)} against the limits ${lim} \u2192 ${v}</span></div>`;
+  }else{
+    $('ro4').innerHTML=`<div class="trace"><span class="verb">compose</span><span>Target ${T} + dev (${P.dev>0?'+':''}${P.dev.toFixed(2)}) = <b>${raw.toFixed(2)}</b></span><span class="verb">rename</span><span>${raw.toFixed(2)} is already inside [5, 185) \u2014 reported as-is</span><span class="verb">judge</span><span>the end system compares ${fol.toFixed(2)} against the limits ${lim} \u2192 ${v}</span></div>`;
+  }
+}
+
+// ---------- orchestration ----------
+const tsel=$('target');
+for(let t=10;t<=180;t+=10){const o=document.createElement('option');o.value=t;o.textContent=t+'°';tsel.appendChild(o);}
+tsel.value=50;
+function update(){
+  const T=parseFloat(tsel.value);
+  const reads=[parseFloat($('l1').value)||0,parseFloat($('l2').value)||0,parseFloat($('l3').value)||0]
+    .map(v=>((v%180)+180)%180);
+  const P=pipeline(T,reads);
+  draw1(T,reads,P); draw2(T,reads,P); draw3(T,reads,P); draw4(T,reads,P);
+}
+['target','l1','l2','l3'].forEach(id=>$(id).addEventListener('input',update));
+document.querySelectorAll('.presets button').forEach(b=>b.addEventListener('click',()=>{
+  const[t,a,c,d]=b.dataset.c.split(',');
+  tsel.value=t; $('l1').value=a; $('l2').value=c; $('l3').value=d; update();
+}));
+update();
+})();
+</script>
+</body>
+</html>
