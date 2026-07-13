@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promediar un ángulo que da la vuelta — El cálculo del axis tórico, de la falla al método</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=IBM+Plex+Sans:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FCFBF8; --ink:#1B2A41; --ink2:#4A5A70; --hair:#D8D4C8;
+  --amber:#B8860B; --amberbg:#FBF3DF; --target:#2E7D5B; --targetbg:#E9F2ED;
+  --fail:#B3402E; --code:#F3F1EA;
+  --r1:#2F5D8A; --r2:#4E7DAB; --r3:#7099C2;
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper); color:var(--ink); font-family:'Source Serif 4',Georgia,serif; font-size:17.5px; line-height:1.65}
+.page{max-width:760px; margin:0 auto; padding:56px 24px 90px}
+.eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink2)}
+h1{font-family:'IBM Plex Sans',sans-serif; font-size:clamp(28px,5vw,40px); font-weight:700; line-height:1.15; letter-spacing:-.015em; margin:10px 0 8px}
+.subtitle{font-size:19px; font-style:italic; color:var(--ink2); margin-bottom:22px}
+.meta{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink2); border-top:1px solid var(--ink); border-bottom:1px solid var(--hair); padding:10px 0; margin-bottom:40px}
+h2{font-family:'IBM Plex Sans',sans-serif; font-size:23px; font-weight:700; margin:52px 0 14px; letter-spacing:-.01em}
+h2 .n{color:var(--amber); font-family:'IBM Plex Mono',monospace; font-weight:600; margin-right:10px}
+h3{font-family:'IBM Plex Sans',sans-serif; font-size:17px; font-weight:600; margin:30px 0 10px}
+p{margin:0 0 16px}
+strong{font-weight:600}
+.abstract{background:var(--amberbg); border-left:3px solid var(--amber); padding:18px 22px; margin-bottom:8px; font-size:16.5px}
+.abstract .lbl{font-family:'IBM Plex Sans',sans-serif; font-weight:700; font-size:13px; letter-spacing:.08em; text-transform:uppercase; display:block; margin-bottom:8px}
+code, .mono{font-family:'IBM Plex Mono',monospace; font-size:.86em; background:var(--code); padding:1px 5px; border-radius:2px}
+pre{font-family:'IBM Plex Mono',monospace; font-size:13px; line-height:1.55; background:var(--code); border:1px solid var(--hair); padding:14px 18px; overflow-x:auto; margin:0 0 16px}
+.eq{font-family:'IBM Plex Mono',monospace; font-size:14.5px; text-align:center; padding:14px 10px; margin:0 0 16px; background:var(--code); border-top:1px solid var(--hair); border-bottom:1px solid var(--hair)}
+figure{margin:26px 0 30px}
+figure svg{display:block; width:100%; height:auto; background:#fff; border:1px solid var(--hair)}
+figcaption{font-family:'IBM Plex Sans',sans-serif; font-size:13px; color:var(--ink2); margin-top:8px; line-height:1.5}
+figcaption b{color:var(--ink)}
+table{width:100%; border-collapse:collapse; font-size:14.5px; margin:0 0 18px; font-family:'IBM Plex Sans',sans-serif}
+th{font-size:12px; letter-spacing:.06em; text-transform:uppercase; text-align:left; color:var(--ink2); border-bottom:2px solid var(--ink); padding:7px 10px}
+td{border-bottom:1px solid var(--hair); padding:7px 10px}
+td.num, th.num{text-align:right; font-family:'IBM Plex Mono',monospace}
+.callout{border:1.5px solid var(--ink); padding:16px 20px; margin:22px 0; font-size:16px}
+.callout .lbl{font-family:'IBM Plex Sans',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--fail); display:block; margin-bottom:6px}
+.callout.ok .lbl{color:var(--target)}
+.footnote{font-size:14px; color:var(--ink2); border-top:1px solid var(--hair); padding-top:14px; margin-top:60px; font-style:italic}
+.toc{font-family:'IBM Plex Sans',sans-serif; font-size:14.5px; columns:2; gap:30px; margin-bottom:10px}
+.toc a{color:var(--ink); text-decoration:none; display:block; padding:3px 0; border-bottom:1px dotted var(--hair)}
+.toc a:hover{color:var(--amber)}
+.toc .n{font-family:'IBM Plex Mono',monospace; color:var(--amber); margin-right:8px; font-size:12px}
+@media(max-width:640px){ .toc{columns:1} }
+</style>
+
+<style id="axis-nav-css">
+.axis-nav{position:sticky;top:0;z-index:999;display:flex;flex-wrap:wrap;align-items:center;gap:4px;
+  padding:9px 18px;margin:0 0 0 0;background:rgba(252,251,247,.94);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--hair,#D8D4C8);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;letter-spacing:.06em}
+.axis-nav .axis-brand{font-weight:600;text-transform:uppercase;letter-spacing:.18em;
+  color:var(--ink2,#5A6A80);margin-right:14px;white-space:nowrap}
+.axis-nav a{display:inline-block;padding:5px 11px;text-decoration:none;color:var(--ink2,#5A6A80);
+  border:1px solid transparent;border-radius:3px;transition:background .15s,color .15s;white-space:nowrap}
+.axis-nav a:hover{background:var(--amberbg,#F6ECD4);color:var(--ink,#1B2A41)}
+.axis-nav a.on{color:var(--amber,#B8860B);border-color:var(--amber,#B8860B);font-weight:600;cursor:default}
+.axis-nav .axis-home{margin-left:auto;font-style:normal;opacity:.75}
+@media(max-width:640px){.axis-nav{font-size:10.5px;padding:8px 12px}.axis-nav .axis-home{margin-left:0}}
+</style>
+</head>
+<body>
+<nav class="axis-nav"><span class="axis-brand">Cálculo del Axis</span><a href="axis.html" title="Los 4 pasos">Resumen</a><a href="#" class="on" title="Artículo técnico">Artículo</a><a href="axis-visual.html" title="Visualización interactiva">Visual</a><a class="axis-home" href="https://alvinasael.github.io/home/">← Project Hub</a></nav>
+
+<div class="page">
+
+<div class="eyebrow">Reporte técnico · Metrología de lentes tóricos · Borrador</div>
+<h1>Promediar un ángulo que da la vuelta</h1>
+<p class="subtitle">Cómo se calcula el axis final de un lente tórico a partir de tres lecturas — y por qué el promedio común no sirve para hacerlo.</p>
+<div class="meta">Axis cíclico mod 180° &nbsp;·&nbsp; media circular axial &nbsp;·&nbsp; Excel / Oracle PL/SQL / InfinityQS &nbsp;·&nbsp; validado con 100 casos + Monte Carlo (1.62 M lentes)</div>
+
+<div class="abstract">
+<span class="lbl">Resumen</span>
+Como resultado del Gage R&amp;R, el axis final de un lente tórico se reporta como el promedio de tres lecturas independientes. Pero el axis es una cantidad <em>cíclica módulo 180°</em> —0° y 180° son el mismo eje— y el promedio aritmético falla precisamente donde más importa: cerca del cruce 0/180 y en los escenarios de mezcla de producto. Este reporte documenta el método adoptado (media circular axial → desviación circular → pliegue a la ventana de reporte), la matemática que lo sostiene, los casos límite que motivaron su diseño, y la evidencia de validación: una suite determinística de 100 casos con resultado 100/100 y un estudio Monte Carlo de 1.62 millones de lentes simulados con clasificación perfecta.
+</div>
+
+<h2 style="margin-top:34px">Contenido</h2>
+<nav class="toc">
+<a href="#s1"><span class="n">1</span>El problema: una regla que muerde su propia cola</a>
+<a href="#s2"><span class="n">2</span>Dónde falla el promedio común</a>
+<a href="#s3"><span class="n">3</span>El método en cuatro pasos</a>
+<a href="#s4"><span class="n">4</span>La matemática del Axis Mean</a>
+<a href="#s5"><span class="n">5</span>La desviación circular: el camino corto</a>
+<a href="#s6"><span class="n">6</span>La ventana de reporte [5, 185)</a>
+<a href="#s7"><span class="n">7</span>El caso límite: SKU hermanos a 90°</a>
+<a href="#s8"><span class="n">8</span>Validación</a>
+<a href="#s9"><span class="n">9</span>Notas de implementación</a>
+<a href="#s10"><span class="n">10</span>Conclusión</a>
+</nav>
+
+<h2 id="s1"><span class="n">1</span>El problema: una regla que muerde su propia cola</h2>
+<p>El axis del cilindro de un lente tórico se mide en grados, de 0 a 180. Pero a diferencia de una longitud o un peso, esa escala no es una recta: <strong>es un anillo</strong>. Un eje a 0° y un eje a 180° son físicamente el mismo eje — la escala da la vuelta completa y se muerde la cola. En términos formales, el axis es una cantidad <em>axial</em>, cíclica módulo 180°.</p>
+<p>Esa propiedad es inofensiva mientras las mediciones caen lejos del cruce. Un lente de target 90° con lecturas de 88.8, 90.4 y 91.5 se comporta como cualquier variable continua. El problema aparece con los SKUs cercanos al cruce —target 10° o target 180°— donde el ruido normal del instrumento hace que las lecturas <em>caigan a ambos lados del cero</em>: 178.8, 0.4, 1.5. Numéricamente esas tres lecturas parecen dispersas; físicamente están apiñadas en menos de 3° alrededor del mismo eje.</p>
+
+<h2 id="s2"><span class="n">2</span>Dónde falla el promedio común</h2>
+<p>El promedio aritmético de 178.8, 0.4 y 1.5 es <strong>60.23°</strong> — un eje que no se parece a ninguna de las tres lecturas y que está a 60° del lente real. El promedio trata los ángulos como puntos en una recta, y en una recta el punto medio entre 178.8 y 0.4 está en el medio del camino <em>largo</em>, no del corto.</p>
+
+<figure>
+<svg viewBox="0 0 720 250" role="img" aria-label="Comparación del promedio aritmético contra la media circular">
+  <!-- izquierda: promedio ingenuo -->
+  <g font-family="IBM Plex Mono,monospace">
+  <text x="180" y="26" text-anchor="middle" font-size="12" font-weight="600" fill="#1B2A41">promedio aritmético</text>
+  <path d="M 30 200 A 150 150 0 0 1 330 200" fill="none" stroke="#1B2A41" stroke-width="1.4"/>
+  <line x1="22" y1="200" x2="338" y2="200" stroke="#1B2A41" stroke-width="1.4"/>
+  <!-- lecturas -->
+  <line x1="180" y1="200" x2="30.3" y2="196.9" stroke="#2F5D8A" stroke-width="2"/>
+  <line x1="180" y1="200" x2="330" y2="199" stroke="#4E7DAB" stroke-width="2"/>
+  <line x1="180" y1="200" x2="329.9" y2="196.1" stroke="#7099C2" stroke-width="2"/>
+  <!-- resultado ingenuo 60.23 -->
+  <line x1="180" y1="200" x2="254.4" y2="69.8" stroke="#B3402E" stroke-width="3"/>
+  <text x="268" y="62" font-size="12" fill="#B3402E" font-weight="600">60.2° ✗</text>
+  <text x="180" y="234" text-anchor="middle" font-size="11" fill="#4A5A70">(178.8 + 0.4 + 1.5) / 3</text>
+  <!-- derecha: circular -->
+  <text x="540" y="26" text-anchor="middle" font-size="12" font-weight="600" fill="#1B2A41">media circular axial</text>
+  <path d="M 390 200 A 150 150 0 0 1 690 200" fill="none" stroke="#1B2A41" stroke-width="1.4"/>
+  <line x1="382" y1="200" x2="698" y2="200" stroke="#1B2A41" stroke-width="1.4"/>
+  <line x1="540" y1="200" x2="390.3" y2="196.9" stroke="#2F5D8A" stroke-width="2"/>
+  <line x1="540" y1="200" x2="690" y2="199" stroke="#4E7DAB" stroke-width="2"/>
+  <line x1="540" y1="200" x2="689.9" y2="196.1" stroke="#7099C2" stroke-width="2"/>
+  <line x1="540" y1="200" x2="690" y2="199.4" stroke="#B8860B" stroke-width="3.4"/>
+  <text x="648" y="182" font-size="12" fill="#B8860B" font-weight="600">0.23° ✓</text>
+  <text x="540" y="234" text-anchor="middle" font-size="11" fill="#4A5A70">suma de vectores con ángulo doblado</text>
+  </g>
+</svg>
+<figcaption><b>Figura 1.</b> Las mismas tres lecturas (178.8°, 0.4°, 1.5° — azules), dos promedios. El aritmético (izquierda, rojo) produce 60.2°, un eje que no existe en los datos. La media circular (derecha, ámbar) produce 0.23°, donde el lente realmente está.</figcaption>
+</figure>
+
+<p>Este defecto no es teórico. Las dos fórmulas de producción evaluadas antes de este trabajo lo parchaban de formas distintas, y ambas con grietas. La primera normalizaba cada lectura contra el target antes de promediar, pero su regla de salida («si el resultado es menor a 0, restar de 180») confundía el ángulo <em>suplementario</em> con el <em>congruente</em>, introduciendo un error de signo cerca del cruce. La segunda —la fórmula de umbrales fijos en PL/SQL— ajustaba lecturas crudas solo cuando el target superaba 135° o bajaba de 45°, dejando una <strong>zona muerta entre 45° y 135°</strong> donde un lente mezclado cerca del cruce 0/180 producía promedios sin sentido físico: para un target de 50° con un lente real de 180°, valores aleatorios con desviación estándar de 51°.</p>
+<p>La lección de ambas fallas es la misma: los parches con umbrales y casos especiales tratan el síntoma. El método correcto trata la causa — promediar <em>respetando</em> que la escala es un anillo.</p>
+
+<h2 id="s3"><span class="n">3</span>El método en cuatro pasos</h2>
+<table>
+<tr><th style="width:70px">Paso</th><th style="width:170px">Nombre</th><th>Qué hace</th><th style="width:150px">Pregunta que responde</th></tr>
+<tr><td class="num">1</td><td><strong>Readings</strong></td><td>Tomar 3 lecturas independientes de axis del mismo lente, según el procedimiento de Gage R&amp;R.</td><td><em>¿Qué dice el instrumento?</em></td></tr>
+<tr><td class="num">2</td><td><strong>Axis Mean</strong></td><td>Calcular el eje medio con la media circular axial — el promedio que entiende el cruce 0/180.</td><td><em>¿Qué midió?</em></td></tr>
+<tr><td class="num">3</td><td><strong>Circular Deviation</strong></td><td>Calcular la desviación contra el target por el camino angular más corto, siempre en ±90°. <strong>Aquí se define el criterio de aceptación:</strong> |dev| ≤ 5.</td><td><em>¿Qué tan lejos quedó del target?</em></td></tr>
+<tr><td class="num">4</td><td><strong>Final Results</strong></td><td>Plegar Target + dev a la ventana [5, 185) y enviar a InfinityQS, donde el valor se evalúa contra los límites de especificación del producto. Este paso no mide — solo da formato.</td><td><em>¿Cómo lo reporto?</em></td></tr>
+</table>
+<p>La secuencia codifica una división de responsabilidades: <strong>este cálculo mide y traduce; la disposición la ejecuta InfinityQS</strong>, evaluando el valor final contra los límites del producto. La división es segura por una propiedad demostrable del pliegue: un valor plegado aterriza siempre a 90° o más del target en la escala de reporte, de modo que jamás puede caer dentro de la banda de aceptación [T−5, T+5] de un lente que no la merecía.</p>
+
+<h2 id="s4"><span class="n">4</span>La matemática del Axis Mean</h2>
+<p>La media circular descansa en una sola idea: <strong>en vez de promediar números, promediar flechas.</strong> Cada lectura se convierte en un vector unitario que apunta en su dirección; los vectores se suman punta con cola; y la dirección de la flecha resultante es el promedio. Dos flechas que apuntan casi igual se suman en una flecha entre ambas — sin importar cómo se llamen numéricamente sus ángulos.</p>
+<p>Pero un eje no es una dirección: no distingue «hacia adelante» de «hacia atrás». Una flecha a 0° y una a 180° apuntan en sentidos opuestos y se cancelarían — cuando físicamente son el mismo eje. La solución, estándar en estadística direccional, es <strong>doblar el ángulo antes de convertirlo en flecha</strong>: al multiplicar por 2, los ejes 0° y 180° se convierten ambos en flechas hacia 0°/360°, idénticas. Todo el trabajo ocurre en ese «mundo doblado», y al final se divide entre 2 para regresar.</p>
+
+<figure>
+<svg viewBox="0 0 720 290" role="img" aria-label="El mundo doblado: suma vectorial punta con cola y regreso al semicírculo">
+<g font-family="IBM Plex Mono,monospace">
+<text x="170" y="24" text-anchor="middle" font-size="12" font-weight="600" fill="#1B2A41">mundo doblado (×2)</text>
+<circle cx="170" cy="158" r="112" fill="none" stroke="#1B2A41" stroke-width="1.3"/>
+<text x="294" y="162" font-size="10" fill="#4A5A70">0°</text><text x="164" y="36" font-size="10" fill="#4A5A70">90°</text>
+<text x="26" y="162" font-size="10" fill="#4A5A70" text-anchor="end">180°</text><text x="164" y="288" font-size="10" fill="#4A5A70">270°</text>
+<!-- lecturas 138.8/140.4/141.5 -> 2θ = 277.6/280.8/283.0 ; seg=35 -->
+<defs>
+<marker id="m1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2F5D8A"/></marker>
+<marker id="m2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#4E7DAB"/></marker>
+<marker id="m3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7099C2"/></marker>
+<marker id="ms" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#B8860B"/></marker>
+</defs>
+<line x1="170" y1="158" x2="174.63" y2="192.68" stroke="#2F5D8A" stroke-width="2.4" marker-end="url(#m1)"/>
+<line x1="174.63" y1="192.68" x2="181.19" y2="227.06" stroke="#4E7DAB" stroke-width="2.4" marker-end="url(#m2)"/>
+<line x1="181.19" y1="227.06" x2="189.07" y2="261.16" stroke="#7099C2" stroke-width="2.4" marker-end="url(#m3)"/>
+<line x1="170" y1="158" x2="189.07" y2="261.16" stroke="#B8860B" stroke-width="3.2" marker-end="url(#ms)"/>
+<text x="226" y="248" font-size="11" fill="#B8860B" font-weight="600">resultante</text>
+<text x="226" y="262" font-size="10" fill="#B8860B">ATAN2 → 280.47°</text>
+<!-- transición -->
+<text x="392" y="152" text-anchor="middle" font-size="16" font-weight="700" fill="#1B2A41">÷2</text>
+<path d="M 372 166 L 414 166" stroke="#1B2A41" stroke-width="1.4" marker-end="url(#ms)"/>
+<!-- derecha -->
+<text x="565" y="24" text-anchor="middle" font-size="12" font-weight="600" fill="#1B2A41">mundo real (÷2)</text>
+<path d="M 455 230 A 110 110 0 0 1 675 230" fill="none" stroke="#1B2A41" stroke-width="1.3"/>
+<line x1="447" y1="230" x2="683" y2="230" stroke="#1B2A41" stroke-width="1.3"/>
+<line x1="565" y1="230" x2="479.9" y2="160.3" stroke="#B8860B" stroke-width="3.2"/>
+<text x="470" y="148" font-size="12" fill="#B8860B" font-weight="600">140.23°</text>
+<text x="565" y="262" text-anchor="middle" font-size="10" fill="#4A5A70">Axis Mean = 280.47 / 2</text>
+</g>
+</svg>
+<figcaption><b>Figura 2.</b> Lecturas 138.8°, 140.4° y 141.5°. Izquierda: cada lectura doblada (2θ ≈ 278–283°) se convierte en un vector unitario; los tres se encadenan punta con cola y la resultante (ámbar) apunta a 280.47°. Derecha: dividir entre 2 devuelve el eje medio al mundo real — 140.23°.</figcaption>
+</figure>
+
+<h3>De ángulos a componentes, y de regreso</h3>
+<p>La suma de vectores se ejecuta con aritmética simple gracias a la descomposición en componentes. Cada flecha de largo 1 queda definida por sus dos sombras: <code>cos(2θ)</code> —cuánto apunta en horizontal (x)— y <code>sin(2θ)</code> —cuánto apunta en vertical (y). Sumar flechas es entonces sumar las x entre sí y las y entre sí:</p>
+<pre>Lectura → ángulo doblado →  (cos, sin)
+ 138.8  →     277.6°     →  (+0.1323, −0.9912)
+ 140.4  →     280.8°     →  (+0.1874, −0.9823)
+ 141.5  →     283.0°     →  (+0.2250, −0.9744)
+                            ───────────────────
+              Σ (SUMPRODUCT) = (+0.5447, −2.9479)</pre>
+<p>El par (Σcos, Σsin) son las componentes de la resultante. La función <code>ATAN2</code> hace el viaje inverso — recibe las dos componentes y devuelve el ángulo de la flecha que definen: 280.47°, que dividido entre 2 da el <strong>Axis Mean = 140.2334°</strong>. El paso 2 completo es un ciclo de ida y vuelta entre dos representaciones del mismo objeto: se descompone porque los ángulos no se pueden promediar directamente, se suma porque las componentes sí, y se recompone porque lo que se quiere al final es un ángulo.</p>
+<div class="eq">=MOD(DEGREES(ATAN2(SUMPRODUCT(COS(RADIANS(2*F:H))), SUMPRODUCT(SIN(RADIANS(2*F:H)))))/2, 180)</div>
+<p>Dos observaciones prácticas. Primera: la resultante no tiene largo 1 (aquí mide ≈ 2.998 de un máximo de 3), pero <code>ATAN2</code> solo usa su dirección, no su longitud — por eso la fórmula no necesita dividir entre 3. Segunda: esa longitud es información gratuita sobre la <em>concordancia</em> de las lecturas: mientras más cerca del máximo, más de acuerdo están entre sí. Si en el futuro se desea un monitor de repetibilidad, ya está calculado dentro de esta misma fórmula.</p>
+
+<h2 id="s5"><span class="n">5</span>La desviación circular: el camino corto</h2>
+<p>Con el eje medio en mano, la pregunta de calidad es qué tan lejos quedó del target. La resta directa engaña: un eje medio de 179° contra un target de 2° da una diferencia «ingenua» de 177°, cuando la distancia real —el camino corto alrededor del anillo— es de solo 3°, en dirección negativa. En una escala mod 180, el camino corto nunca excede 90°.</p>
+
+<figure>
+<svg viewBox="0 0 720 260" role="img" aria-label="Camino corto contra camino largo entre target y eje medio">
+<g font-family="IBM Plex Mono,monospace">
+<path d="M 200 225 A 165 165 0 0 1 530 225" fill="none" stroke="#1B2A41" stroke-width="1.4"/>
+<line x1="190" y1="225" x2="540" y2="225" stroke="#1B2A41" stroke-width="1.4"/>
+<!-- target 2° -->
+<line x1="365" y1="225" x2="529.9" y2="219.2" stroke="#2E7D5B" stroke-width="2.6"/>
+<text x="545" y="222" font-size="11" fill="#2E7D5B" font-weight="600">T = 2°</text>
+<!-- axis mean 179 -->
+<line x1="365" y1="225" x2="200.1" y2="222.1" stroke="#B8860B" stroke-width="3"/>
+<text x="140" y="220" font-size="11" fill="#B8860B" font-weight="600">179°</text>
+<!-- camino corto: arco pequeño cruzando 0/180 por "afuera" (representado con dos tramos junto al diámetro) -->
+<path d="M 467 221.4 A 102 102 0 0 1 467 225 M 263 223.2 A 102 102 0 0 1 263 225" fill="none" stroke="#B3402E" stroke-width="0"/>
+<path d="M 467 222 A 102 102 0 0 0 468 225" fill="none" stroke="#B3402E" stroke-width="2.6"/>
+<path d="M 263 223 A 102 102 0 0 1 262 225" fill="none" stroke="#B3402E" stroke-width="2.6"/>
+<text x="480" y="248" font-size="12" fill="#B3402E" font-weight="600">dev = −3°  ✓ (cruza el 0/180)</text>
+<!-- camino largo -->
+<path d="M 460 216.7 A 95 95 0 0 1 270.6 216.7" fill="none" stroke="#4A5A70" stroke-width="1.4" stroke-dasharray="5 5" opacity=".6"/>
+<text x="365" y="118" text-anchor="middle" font-size="11" fill="#4A5A70">+177° ✗ camino largo (descartado)</text>
+</g>
+</svg>
+<figcaption><b>Figura 3.</b> Target en 2° (verde), eje medio en 179° (ámbar). La resta ingenua recorre el camino largo (+177°, punteado). La desviación circular toma el corto: −3°, cruzando el 0/180. La disposición PASS/FAIL se toma sobre este valor.</figcaption>
+</figure>
+
+<p>La fórmula pliega cualquier resta al rango (−90, +90] con un solo bloque de aritmética modular — el mismo «ladrillo» que reaparece en todo el método:</p>
+<div class="eq">=IF(MOD(I−C+90,180)−90 = −90, 90, MOD(I−C+90,180)−90)</div>
+<p>El <code>+90</code> desplaza la ventana para que el corte caiga donde debe; el <code>MOD(…,180)</code> quita vueltas completas del anillo; el <code>−90</code> deshace el desplazamiento. El <code>IF</code> exterior resuelve el único empate genuino: una desviación de exactamente −90° y una de +90° describen el mismo eje perpendicular, y la convención adoptada reporta ese caso siempre como +90, por consistencia. Este valor define el criterio de aceptación —<strong>|dev| ≤ 5°</strong>— que InfinityQS aplica aguas abajo como límites de especificación alrededor del target.</p>
+
+<h2 id="s6"><span class="n">6</span>La ventana de reporte [5, 185)</h2>
+<p>El valor que viaja a InfinityQS es Target + dev — el eje absoluto reconstruido. Para los lentes en especificación ese número ya cae donde debe: con targets de 10° a 180° y desviación de ±5°, el resultado vive en [5, 185], y la convención existente del sistema (un lente de target 180 que mide alto se registra como 181, 182…) queda intacta. Pero en escenarios de mezcla el resultado crudo puede salirse: 230, o −20. El paso 4 lo devuelve a la ventana sumando o restando una sola vuelta de 180:</p>
+<div class="eq">=IF((C+K)≥185, (C+K)−180, IF((C+K)&lt;5, (C+K)+180, (C+K)))</div>
+
+<figure>
+<svg viewBox="0 0 720 190" role="img" aria-label="Recta numérica con la ventana de reporte y un pliegue">
+<g font-family="IBM Plex Mono,monospace">
+<rect x="163" y="62" width="331" height="56" fill="#FBF3DF" stroke="#B8860B" stroke-width="1.2"/>
+<text x="328" y="50" text-anchor="middle" font-size="11" fill="#B8860B" font-weight="600">ventana de reporte [5, 185)</text>
+<line x1="60" y1="90" x2="680" y2="90" stroke="#1B2A41" stroke-width="1.5"/>
+<g font-size="9.5" fill="#4A5A70" text-anchor="middle">
+<line x1="72" y1="84" x2="72" y2="96" stroke="#1B2A41"/><text x="72" y="112">−80</text>
+<line x1="163" y1="84" x2="163" y2="96" stroke="#1B2A41"/><text x="163" y="112">5</text>
+<line x1="328" y1="84" x2="328" y2="96" stroke="#1B2A41"/><text x="328" y="112">95</text>
+<line x1="494" y1="84" x2="494" y2="96" stroke="#1B2A41"/><text x="494" y="112">185</text>
+<line x1="577" y1="84" x2="577" y2="96" stroke="#1B2A41"/><text x="577" y="112">230</text>
+<line x1="650" y1="84" x2="650" y2="96" stroke="#1B2A41"/><text x="650" y="112">270</text>
+</g>
+<circle cx="577" cy="90" r="6" fill="#1B2A41"/>
+<text x="577" y="34" text-anchor="middle" font-size="11" fill="#1B2A41" font-weight="600">T+dev = 230.23</text>
+<path d="M 577 100 C 577 152, 246 152, 246 100" fill="none" stroke="#B3402E" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="412" y="166" text-anchor="middle" font-size="12" fill="#B3402E" font-weight="600">−180</text>
+<circle cx="246" cy="90" r="6" fill="none" stroke="#B3402E" stroke-width="2.4"/>
+<text x="246" y="34" text-anchor="middle" font-size="11" fill="#B3402E" font-weight="600">→ 50.23</text>
+</g>
+</svg>
+<figcaption><b>Figura 4.</b> Un resultado crudo de 230.23 (target 180 con desviación +50) cae fuera de la ventana; una resta de 180 lo devuelve a 50.23 — el mismo eje físico, escrito en la vuelta que el sistema acepta. Nótese que este panel es una recta, no un anillo: el paso 4 opera sobre la escala de reporte, no sobre la geometría.</figcaption>
+</figure>
+
+<p>La elección de [5, 185) no es arbitraria: es <strong>la única ventana de ancho 180 que contiene todos los resultados en especificación sin cortar ninguno</strong>. Una ventana [0, 180) partiría al SKU 180 por la mitad —el 183 de un lente bueno se plegaría a 3— destruyendo la convención 181/182 y haciendo saltar las cartas de control entre los dos extremos de la escala. Y como |dev| ≤ 90 garantiza que el crudo vive en [Target−90, Target+90], una sola corrección de ±180 siempre basta: el <code>IF</code> no necesita anidarse más.</p>
+<p>Un matiz honesto: el pliegue traduce, pero también <em>disimula</em>. Un 230.23 salta a la vista como anómalo; plegado a 50.23 parece un eje cualquiera. Lo que hace segura esa traducción es una propiedad demostrable: como |dev| ≤ 90, el pliegue solo actúa sobre valores que quedan a 90° o más del target, y los deposita igualmente a 90° o más. Un valor plegado nunca puede aterrizar dentro de la banda de aceptación — la evaluación de InfinityQS sobre el valor final es, por construcción, inmune a falsos PASS. (El único borde teórico: una desviación de exactamente +5.000 en el target 180 se pliega a 5 y se juzga FAIL siendo borderline; el error es de probabilidad cero y en la dirección conservadora.)</p>
+
+<h2 id="s7"><span class="n">7</span>El caso límite: SKU hermanos a 90°</h2>
+<p>Los lentes vendibles llevan targets en múltiplos de 10°. Eso tiene una consecuencia geométrica: <strong>todo SKU tiene un «hermano» exactamente a 90°</strong> (50 y 140, 10 y 100, 90 y 180…), y una mezcla entre hermanos es el peor caso posible para cualquier cálculo de axis, porque 90° es el punto donde «desviación +90» y «desviación −90» describen el mismo eje. No hay un signo correcto que elegir; el empate es matemático, no algorítmico.</p>
+<p>Lo que el método sí garantiza es que el empate se limita al signo. Con la media circular, el eje medio de un lente hermano se mide con la precisión normal del instrumento (σ ≈ 0.87° en la media de tres lecturas) y la <em>magnitud</em> de la desviación queda clavada cerca de 90 — en 200,000 réplicas simuladas, |dev| nunca bajó de 85.8°. El valor reportado cae lejos de los límites de forma contundente e inequívoca, y el eje medio identifica sin ambigüedad cuál SKU se mezcló: <code>ROUND(axis_medio/10)·10</code> acertó el intruso en el 100% de los casos simulados. (El método anterior de promediar desviaciones individuales podía reportar magnitudes tan bajas como 26° en este escenario — un error de factor 3.5 que la media circular elimina de raíz.)</p>
+
+<h2 id="s8"><span class="n">8</span>Validación</h2>
+<p>La evidencia se construyó en tres capas, de lo exhaustivo a lo realista.</p>
+<h3>Barrido determinístico</h3>
+<p>Los 181 targets × 181 desviaciones posibles (32,761 combinaciones, sin ruido) confirmaron que en toda la región de operación el método coincide con las fórmulas anteriores donde éstas eran correctas, y las corrige donde no — sin introducir un solo caso nuevo de eje físico equivocado.</p>
+<h3>Monte Carlo</h3>
+<p>Con ruido realista de instrumento (σ = 1.5° por lectura), se simularon los <strong>324 pares posibles</strong> de SKU etiquetado × lente real (18 × 18) con 5,000 réplicas cada uno: <strong>1.62 millones de lentes</strong>. Un clasificador ciego —que solo ve el target y las tres lecturas, nunca la verdad— separó los tres regímenes sin un solo error:</p>
+<table>
+<tr><th>Verdad (oculta)</th><th class="num">→ PASS</th><th class="num">→ MIX</th><th class="num">→ HERMANO</th></tr>
+<tr><td>Sin mezcla</td><td class="num"><strong>100.000%</strong></td><td class="num">0.000%</td><td class="num">0.000%</td></tr>
+<tr><td>Mezcla (10–80°)</td><td class="num">0.000%</td><td class="num"><strong>100.000%</strong></td><td class="num">0.000%</td></tr>
+<tr><td>Hermano (90°)</td><td class="num">0.000%</td><td class="num">0.000%</td><td class="num"><strong>100.000%</strong></td></tr>
+</table>
+<p>El mismo estudio dejó a la vista el límite físico del sistema, que ninguna fórmula puede mover: una mezcla cuya distancia angular al target sea pequeña es indistinguible del ruido. Con σ = 1.5°, una mezcla de 3° pasa como buena el 98.98% de las veces, una de 5° el 49.9%, y una de 10° —la separación entre SKUs adyacentes— el 0.00%. El sistema alcanza a detectar la mezcla adyacente, pero con un margen que depende directamente de σ: la protección descansa en que el gage se mantenga en su desempeño actual. Ese número —el σ real del Gage R&amp;R— es el supuesto de fondo de todo el método y merece verificación periódica.</p>
+<h3>Suite de 100 casos</h3>
+<p>Para la implementación se construyó una suite determinística de 100 casos (20 por grupo: sin mezcla, mezcla de 10°, de 20–30°, de 40–70°, y hermanos de 90°), con valores esperados calculados de forma independiente y un scorecard automático. Resultado: <strong>100 de 100 correctos</strong>, verificado además contra una implementación de referencia externa con cero discrepancias. La misma suite existe en formato secuencial (una línea por lectura) para la validación de la implementación en base de datos.</p>
+
+<h2 id="s9"><span class="n">9</span>Notas de implementación</h2>
+<p>El método se porta entre plataformas con tres trampas conocidas, todas silenciosas — ninguna produce error; todas producen números plausibles y equivocados.</p>
+<table>
+<tr><th style="width:190px">Trampa</th><th>Detalle</th></tr>
+<tr><td><strong>Orden de ATAN2</strong></td><td>Excel usa <code>ATAN2(coseno, seno)</code>; Oracle, MySQL, Minitab y Python usan <code>ATAN2(seno, coseno)</code> — invertido. Con el orden equivocado, las lecturas 138.8/140.4/141.5 devuelven 84.77 en lugar de 140.23, sin ningún error. El caso de prueba <code>138.8/140.4/141.5 → 140.2334</code> es obligatorio en cada plataforma antes de liberar.</td></tr>
+<tr><td><strong>Signo del MOD</strong></td><td>El <code>MOD</code> de Excel siempre devuelve no-negativo; el de Oracle y MySQL conserva el signo del dividendo (<code>MOD(−24.77, 180) = −24.77</code>). En SQL, cada pliegue requiere el doble módulo: <code>MOD(MOD(x+90,180)+180,180)−90</code>.</td></tr>
+<tr><td><strong>RADIANS / DEGREES</strong></td><td>Oracle no tiene ninguna de las dos; la conversión se escribe con <code>K_RAD := ACOS(−1)/180</code>.</td></tr>
+</table>
+<p>La traducción de referencia a Oracle PL/SQL:</p>
+<pre>K_RAD := ACOS(-1)/180;
+L_SIN := SIN(2*L_R1*K_RAD) + SIN(2*L_R2*K_RAD) + SIN(2*L_R3*K_RAD);
+L_COS := COS(2*L_R1*K_RAD) + COS(2*L_R2*K_RAD) + COS(2*L_R3*K_RAD);
+
+L_AXIS_MEAN := MOD( ATAN2(L_SIN, L_COS)/(2*K_RAD) + 180, 180 );
+
+L_DEV := MOD( MOD(L_AXIS_MEAN - V_AXIS_VALUE + 90, 180) + 180, 180 ) - 90;
+IF L_DEV = -90 THEN L_DEV := 90; END IF;
+
+L_RESULT := V_AXIS_VALUE + L_DEV;
+IF    L_RESULT >= 185 THEN L_RESULT := L_RESULT - 180;
+ELSIF L_RESULT <   5  THEN L_RESULT := L_RESULT + 180;
+END IF;</pre>
+
+<h2 id="s10"><span class="n">10</span>Conclusión</h2>
+<p>El axis de un lente tórico vive en un anillo, y toda la dificultad del cálculo se reduce a respetar esa geometría en lugar de parcharla. El método adoptado lo hace con una sola idea —promediar flechas en el mundo doblado— y un solo ladrillo aritmético —el pliegue al camino corto— que reaparece tres veces: dentro de la suma vectorial del paso 2, explícito en la desviación del paso 3, y adaptado a la ventana de reporte en el paso 4.</p>
+<p>El resultado es un cálculo sin umbrales, sin zonas muertas y sin casos especiales ocultos: correcto en especificación (donde coincide exactamente con las fórmulas que reemplaza), estable en mezcla (donde aquéllas producían valores sin sentido), y honesto en su único límite genuino — el empate de signo a 90°, que no es una debilidad del algoritmo sino una propiedad del problema, y que el método convierte en un FAIL contundente con el SKU intruso identificado.</p>
+
+<p class="footnote">Borrador para reporte técnico. Cifras de validación: barrido determinístico 181×181; Monte Carlo σ = 1.5°/lectura, 324 pares de SKU × 5,000 réplicas (1.62 M lentes); suite de implementación de 100 casos, 100/100. Los archivos de soporte (suite en Excel con scorecard, casos en formato secuencial para base de datos, y visualización interactiva de los cuatro pasos) acompañan este documento.</p>
+
+</div>
+</body>
+</html>
