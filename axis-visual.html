@@ -150,7 +150,7 @@ body>.axis-nav:first-child{margin:-28px -20px 22px}
   <section class="step" aria-label="Step 4: Value sent to the end system">
     <div class="step-head"><span class="step-num">4</span><span class="step-title">Final Results</span><span class="step-q">how do I report it? — same axis, different name</span></div>
     <div class="legend">
-      <span><span class="sw" style="background:var(--amberbg); border:1px solid var(--amber)"></span>window [5, 185)</span>
+      <span><span class="sw" style="background:var(--amberbg); border:1px solid var(--amber)"></span>window [5, 185]</span>
       <span><span class="sw" style="background:var(--targetbg); border:1px solid var(--target)"></span>product limits T±5</span>
       <span><span class="sw" style="background:var(--amber); border-radius:50%; width:10px; height:10px"></span>reported value</span>
       <span><span class="sw" style="background:#fff; border:1.5px dashed var(--ink2); border-radius:50%; width:10px; height:10px"></span>congruent name (±180)</span>
@@ -160,8 +160,8 @@ body>.axis-nav:first-child{margin:-28px -20px 22px}
     </div>
     <div class="viz"><svg id="svg4" viewBox="0 0 520 300" role="img" aria-label="Number line with the reporting window and the fold"></svg></div>
     <div class="readout" id="ro4"></div>
-    <div class="formula">=IF((C+K)&gt;=185,(C+K)−180, IF((C+K)&lt;5,(C+K)+180,(C+K)))</div>
-    <div class="whywin">The folded value is sent to the <b>end system</b>: that is where the official result resides and where the PASS/FAIL decision is made. Why [5, 185)? Every good lens lives there: targets 10 through 180, deviation ±5. It’s the only 180-wide window that cuts none of them — and the one that preserves the 181, 182… convention for the 180 SKU.</div>
+    <div class="formula">=IF((C+K)&gt;185,(C+K)−180, IF((C+K)&lt;5,(C+K)+180,(C+K)))</div>
+    <div class="whywin">The folded value is sent to the <b>end system</b>: that is where the official result resides and where the PASS/FAIL decision is made. Why [5, 185]? Every good lens lives there: targets 10 through 180, deviation ±5. It’s the only 180-wide window that cuts none of them — and the one that preserves the 181, 182… convention for the 180 SKU.</div>
   </section>
 
 </div>
@@ -187,7 +187,7 @@ function pipeline(T,reads){
   const am=((deg(Math.atan2(ss,sc))/2)%180+180)%180;
   const dev=wrap(am-T);
   const raw=T+dev;
-  const folded=raw>=185?raw-180:(raw<5?raw+180:raw);
+  const folded=raw>185?raw-180:(raw<5?raw+180:raw);
   return {sc,ss,am,dev,raw,folded,pass:Math.abs(dev)<=5};
 }
 
@@ -317,7 +317,7 @@ function draw4(T,reads,P){
   const x0=44,x1=498,y=158, MIN=-80,MAX=270;
   const X=v=>x0+(v-MIN)/(MAX-MIN)*(x1-x0);
   el('rect',{x:X(5),y:y-52,width:X(185)-X(5),height:104,fill:C.amberbg,stroke:C.amber,'stroke-width':1.4},svg);
-  txt(svg,(X(5)+X(185))/2,y-62,'window [5, 185): picks ONE name',{'text-anchor':'middle',fill:C.amber,'font-weight':600});
+  txt(svg,(X(5)+X(185))/2,y-62,'window [5, 185]: picks ONE name',{'text-anchor':'middle',fill:C.amber,'font-weight':600});
   el('rect',{x:X(T-5),y:y-26,width:X(T+5)-X(T-5),height:52,fill:C.targetbg,stroke:C.target,'stroke-width':1},svg);
   el('line',{x1:X(T),y1:y-26,x2:X(T),y2:y+26,stroke:C.target,'stroke-width':1.6},svg);
   txt(svg,X(T),y-33,'T\u00b15',{'text-anchor':'middle',fill:C.target,'font-size':9.5,'font-weight':600});
@@ -349,9 +349,9 @@ function draw4(T,reads,P){
   const lim=`[${(T-5)}, ${(T+5)}]`;
   const v=P.pass?'<span class="verdict pass">PASS</span>':'<span class="verdict fail">FAIL</span>';
   if(Math.abs(fol-raw)>0.001){
-    $('ro4').innerHTML=`<div class="trace"><span class="verb">compose</span><span>Target ${T} + dev (${P.dev>0?'+':''}${P.dev.toFixed(2)}) = <b>${raw.toFixed(2)}</b></span><span class="verb">rename</span><span>${raw.toFixed(2)} falls outside [5, 185) \u2192 ${raw.toFixed(2)} ${fol>raw?'+ 180':'\u2212 180'} = <span class="amber">${fol.toFixed(2)}</span></span><span class="verb">judge</span><span>the end system compares ${fol.toFixed(2)} against the limits ${lim} \u2192 ${v}</span></div>`;
+    $('ro4').innerHTML=`<div class="trace"><span class="verb">compose</span><span>Target ${T} + dev (${P.dev>0?'+':''}${P.dev.toFixed(2)}) = <b>${raw.toFixed(2)}</b></span><span class="verb">rename</span><span>${raw.toFixed(2)} falls outside [5, 185] \u2192 ${raw.toFixed(2)} ${fol>raw?'+ 180':'\u2212 180'} = <span class="amber">${fol.toFixed(2)}</span></span><span class="verb">judge</span><span>the end system compares ${fol.toFixed(2)} against the limits ${lim} \u2192 ${v}</span></div>`;
   }else{
-    $('ro4').innerHTML=`<div class="trace"><span class="verb">compose</span><span>Target ${T} + dev (${P.dev>0?'+':''}${P.dev.toFixed(2)}) = <b>${raw.toFixed(2)}</b></span><span class="verb">rename</span><span>${raw.toFixed(2)} is already inside [5, 185) \u2014 reported as-is</span><span class="verb">judge</span><span>the end system compares ${fol.toFixed(2)} against the limits ${lim} \u2192 ${v}</span></div>`;
+    $('ro4').innerHTML=`<div class="trace"><span class="verb">compose</span><span>Target ${T} + dev (${P.dev>0?'+':''}${P.dev.toFixed(2)}) = <b>${raw.toFixed(2)}</b></span><span class="verb">rename</span><span>${raw.toFixed(2)} is already inside [5, 185] \u2014 reported as-is</span><span class="verb">judge</span><span>the end system compares ${fol.toFixed(2)} against the limits ${lim} \u2192 ${v}</span></div>`;
   }
 }
 
