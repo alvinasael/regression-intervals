@@ -248,7 +248,7 @@ figcaption b{color:var(--ink);font-weight:600}
 
     <div class="tk"><div class="tn">07</div><div class="tx"><b>σ sale de los residuos</b> (s = √(SSE/(n−2))) y es propiedad del proceso, no de los datos. Un solo s vale en todo el rango solo si la varianza es constante (homocedasticidad).</div><a class="tref" href="#s9">§09</a></div>
 
-    <div class="tk"><div class="tn">08</div><div class="tx"><b>R² no escala el PI; s sí.</b> R² es relativo y sensible al rango de dry — puede ser altísimo con un PI demasiado ancho. Para conformidad, mira s (S·y·x).</div><a class="tref" href="#s10">§10</a></div>
+    <div class="tk"><div class="tn">08</div><div class="tx"><b>Explicar no es acertar.</b> R² compara tu error contra la variación de tus datos; s lo compara contra tu spec. Mismo error, dos veredictos — y R² nunca supo cuál es tu spec. Es relativo y sensible al rango: puede ser altísimo con un PI que no cabe en tolerancia. Para conformidad, mira s (S·y·x) y el MAE, en dioptrías.</div><a class="tref" href="#s10">§10</a></div>
 
     <div class="tk"><div class="tn">09</div><div class="tx"><b>Mejorar el PI no es juntar datos.</b> El CI se desinfla con n, pero el PI tiene piso = σ. Solo reducir la variabilidad del proceso mismo lo estrecha.</div><a class="tref" href="#s11">§11</a></div>
 
@@ -577,10 +577,58 @@ figcaption b{color:var(--ink);font-weight:600}
   <p>SST es la dispersión total de los wet respecto a su promedio; SSE es la que <em>sobra</em> después de ajustar la recta. R² = 1 sería ajuste perfecto; R² = 0, una recta que no explica nada. Es un número <strong>relativo y adimensional</strong> (entre 0 y 1).</p>
   <p>El contraste con s es la clave práctica. <strong>s tiene unidades de wet</strong> (dioptrías) y mide el tamaño <em>absoluto</em> del error típico alrededor de la recta — es el mismo s de la sección 09, el largo típico de un residuo. R² es relativo: compara ese error contra la dispersión total, y no tiene unidades.</p>
 
+  <h3>Explicar y acertar: contra qué comparas el error</h3>
+  <p>Acá está la distinción que todo lo demás de esta sección desarrolla, y conviene fijarla antes de seguir. <strong>El error es el mismo número en los dos casos; lo que cambia es el juez.</strong></p>
+  <p><strong>Explicar</strong> es comparar tu error contra la variación de tus datos: ¿es chico comparado con cuánto se riega el wet? Eso lo contesta R². <strong>Acertar</strong> es comparar ese mismo error contra tu especificación: ¿es chico comparado con lo que el cliente tolera? Eso lo contesta s, en dioptrías.</p>
+  <p>Un ejemplo con números. Supón que tu error típico es <strong>s = 0.20 D</strong>, fijo, y que tu spec es ±0.25 D:</p>
+
+  <table class="tbl">
+    <thead><tr><th>El juez</th><th>Contra qué compara 0.20 D</th><th>Veredicto</th></tr></thead>
+    <tbody>
+      <tr><td>R² — ¿explica?</td><td>la dispersión de los wet (≈ 2.4 D)</td><td>R² = 0.993 · explica muy bien</td></tr>
+      <tr><td>s — ¿acierta?</td><td>la ventana de spec (±0.25 D)</td><td>21% de escape · no acierta</td></tr>
+    </tbody>
+  </table>
+
+  <p>Mismo 0.20 D. Un juez dice "excelente", el otro dice "inaceptable", y ninguno miente: contestan preguntas distintas. Con el proceso perfectamente centrado y el modelo perfectamente válido, ese 0.20 D contra una ventana de ±0.25 D deja fuera de spec a una de cada cinco piezas — mientras el reporte luce un R² de 0.993.</p>
+
+  <div class="callout keyeq">
+    <span class="clabel">La frase para llevarte</span>
+    <p><strong>Explicar es relativo a tus datos; acertar es relativo a tu necesidad.</strong> R² nunca supo cuál es tu spec — no puede opinar sobre si aciertas. Por eso un criterio de liberación escrito solo en R² no mide conformidad, por alto que pongas el umbral.</p>
+  </div>
+
   <div class="callout note">
     <span class="clabel">Una nota sobre la notación: s, S y S·y·x</span>
     <p>Los tres nombres son el mismo número. La <strong>s</strong> de las fórmulas es el error estándar de la estimación, s = √(SSE/(n−2)) — el largo típico de un residuo de la sección 09. En la salida de Minitab aparece etiquetado como <strong>S</strong>, y muchos textos lo escriben <strong>S·y·x</strong>, que se lee "la desviación de y dado x": la dispersión de wet alrededor de la recta, ya descontado el efecto del dry. <strong>s = S = S·y·x</strong>, en dioptrías.</p>
   </div>
+
+  <h3>Las dos líneas de referencia</h3>
+  <p>SST y SSE tienen la misma forma —sumas de distancias verticales al cuadrado— y se confunden con facilidad. La diferencia entera está en <strong>contra qué línea mides</strong>:</p>
+  <p><strong>SST se mide contra ȳ</strong>, la horizontal del promedio de tus wet. Es el modelo tonto: "no me importa el dry, predigo siempre el promedio". Esa es toda la variación que hay que explicar, y existe aunque no ajustes ninguna recta. <strong>SSE se mide contra la recta.</strong> Es lo que sobra después de usar el dry — el error de verdad. R² = 1 − SSE/SST es, entonces, cuánto del camino de la horizontal a la recta lograste recorrer.</p>
+  <p>Ahí está el detalle que importa: <strong>el residuo de un punto se mide contra la recta, no contra ȳ</strong>. Si un punto cae lejos de ȳ y la recta lo atrapa, eso no es error — es variación <em>explicada</em>, y es justamente lo que sube el R².</p>
+
+  <figure>
+    <div class="fig-head"><span class="fig-tag">Figura 10</span><span class="fig-title">Mismos puntos, mismos residuos — solo cambia el rango barrido</span></div>
+    <div class="controls">
+      <label style="min-width:160px">Rango de dry barrido</label>
+      <input type="range" id="f10w" min="0.4" max="9" value="9" step="0.1">
+      <span class="val" id="f10wv">9.0</span>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="ck">SST · contra ȳ</div><div class="cv" id="f10sst">—</div></div>
+      <div class="card"><div class="ck">SSE · contra la recta</div><div class="cv" id="f10sse">—</div></div>
+      <div class="card"><div class="ck">R² = 1 − SSE/SST</div><div class="cv" id="f10r2">—</div></div>
+      <div class="card"><div class="ck">s (error típico)</div><div class="cv" id="f10s">—</div></div>
+    </div>
+    <div class="legendrow">
+      <span><span class="swl" style="border-top-color:#5F5E5A;border-top-style:dashed"></span>ȳ — el promedio</span>
+      <span><span class="swl" style="border-top-color:#23282D"></span>la recta ajustada</span>
+      <span><span class="sw" style="background:rgba(95,94,90,.45)"></span>SST — punto a ȳ</span>
+      <span><span class="sw" style="background:#D85A30"></span>SSE — punto a la recta</span>
+    </div>
+    <div class="chartbox"><canvas id="f10"></canvas></div>
+    <figcaption>Los <b>14 residuos son idénticos</b> en todas las posiciones del control: el mismo proceso, el mismo ruido, los mismos segmentos coral. Lo único que cambia es cuán ancho barres el dry. Con el rango abierto, los segmentos grises (del punto a ȳ) son enormes y los coral se ven chicos <i>en comparación</i>. Cierra el rango y los grises se desploman mientras los coral <b>no se mueven ni un milímetro</b>: el R² cae de ≈0.79 a ≈0.00 sin que el proceso cambie en nada. Mira las dos tarjetas de la derecha mientras deslizas — <b>SSE y s se quedan clavados</b> todo el recorrido. Ese s es el error que decide si un lente pasa spec, y el rango no lo toca. <i>(El σ de esta figura está exagerado para que los segmentos se vean; con el ruido real de una calibración el R² arrancaría sobre 0.99 y el desplome sería aún más brutal — es la tabla de la sección siguiente.)</i></figcaption>
+  </figure>
 
   <h3>Sensible al rango: el mismo proceso, dos R²</h3>
   <p>Que R² sea "relativo" tiene una consecuencia incómoda. Como compara contra SST = Σ(yᵢ − ȳ)², y SST crece cuando mides un rango ancho de dry, <strong>el mismo proceso puede dar dos R² completamente distintos</strong> según cuán ancho lo barras. Imagina un proceso con ruido residual fijo s = 0.12 D, medido de dos maneras:</p>
@@ -604,9 +652,49 @@ figcaption b{color:var(--ink);font-weight:600}
     <p class="eqnote">El PI y el CI se escalan con <span class="ctr">s</span>, no con R². Para conformidad pieza a pieza, la métrica relevante es <strong>s</strong> (el error estándar de la estimación, S·y·x en Minitab), porque es la que está dentro del radical. R² responde "¿la recta explica mucho de la variación?"; s responde "¿qué tan lejos cae una pieza, en dioptrías?".</p>
   </div>
 
+  <div class="callout caution">
+    <span class="clabel">Tres cosas más que R² no hace</span>
+    <p><strong>1 · R² siempre sube si agregas términos al modelo.</strong> Con un polinomio de grado n−1 puedes forzar R² = 1 sobre n puntos: ajuste "perfecto", cero valor predictivo. Y si el SSE no baja lo suficiente, el modelo nuevo queda <em>peor</em> que el viejo pese al R² mayor, porque pierdes un grado de libertad y el error cuadrático medio sube.</p>
+    <p><strong>2 · R² no mide la pendiente.</strong> Un R² alto no significa que el dry mueva mucho al wet; solo que los puntos están alineados.</p>
+    <p><strong>3 · R² no valida la forma del modelo.</strong> Si la relación real es curva y le metes una recta, el R² puede salir perfectamente respetable igual. Eso se chequea con el gráfico de residuos vs. dry, no con R².</p>
+    <p class="eqnote" style="text-align:left">Las tres vienen de Montgomery, <i>Applied Statistics and Probability for Engineers</i>, §11-7 (Adequacy of the Regression Model), que cierra con la misma frontera de esta sección: aunque R² sea grande, eso no implica que el modelo vaya a dar predicciones acertadas de observaciones futuras.</p>
+  </div>
+
   <div class="callout analogy">
     <span class="clabel">Analogía</span>
     <p>R² es como decir "acerté el 98% del recorrido". El 98% de 1000 km todavía deja 20 km de error; el 98% de 1 metro deja 2 cm. El porcentaje solo no te dice los metros — <strong>s te da los metros</strong>, el error típico en dioptrías. Para un examen escolar el porcentaje alcanza; para aterrizar un avión quieres las unidades absolutas. La calibración es un aterrizaje, no un examen: usa s.</p>
+  </div>
+
+  <h3>El tercer número: el MAE</h3>
+  <p>Hay una tercera métrica que vas a ver en tu flujo de validación y que conviene ubicar junto a las otras dos. El <strong>error absoluto medio</strong> promedia las mismas distancias a la recta, pero en valor absoluto en vez de al cuadrado:</p>
+  <div class="eqwrap">$$ \text{MAE} = \frac{1}{n}\sum_i \bigl|\,y_i - \hat{y}_i\,\bigr| $$</div>
+  <p>Es el mismo ingrediente que SSE —la distancia vertical del punto a la recta— resumido de otra manera. SSE eleva al cuadrado y <em>suma</em>, así que queda en dioptrías² y crece con n. El MAE toma el valor absoluto y <em>promedia</em>, así que queda en dioptrías y no depende de cuántos datos tengas. El cuadrado castiga más los puntos lejanos; el absoluto los pesa parejo. Si los errores son aproximadamente normales, los dos quedan atados:</p>
+  <div class="eqwrap">$$ \text{MAE} \;\approx\; 0.80\,\cdot s \qquad\left(\text{exactamente }\sqrt{2/\pi}\,\right) $$</div>
+
+  <p>La diferencia práctica entre MAE y s no es la aritmética — es <strong>con qué datos los calculas</strong>:</p>
+
+  <table class="tbl">
+    <thead><tr><th></th><th>Se calcula con…</th><th>Qué te dice</th></tr></thead>
+    <tbody>
+      <tr><td>s (S·y·x)</td><td>los datos del ajuste</td><td>el error del modelo <em>en su propia casa</em></td></tr>
+      <tr><td>MAE</td><td>datos nuevos, independientes</td><td>el error del modelo <em>en la calle</em></td></tr>
+    </tbody>
+  </table>
+
+  <p>Por eso el MAE es la métrica de <em>validación</em>, no de ajuste: es la respuesta directa a "si meto este dry, ¿por cuántas dioptrías me puedo pasar?". Un modelo puede tener un s precioso y un MAE feo, y la diferencia entre los dos es justamente lo que el ajuste no vio — proceso que derivó, ruido de medición en el dry que entra, o lentes distintos de los que calibraste. Si tu MAE sale muy por encima de 0.80·s, ese exceso no se arregla mejorando el ajuste.</p>
+
+  <div class="callout caution">
+    <span class="clabel">Cuidado con los criterios escritos como "R² ≥ X%"</span>
+    <p>Es común ver en un procedimiento un renglón del tipo: <i>"Confirm the model explains an acceptable proportion of the observed variation and provides adequate predictive capability (R² ≥ 70%)"</i>. La primera mitad está bien — esa es exactamente la pregunta que R² contesta, y como filtro de entrada el umbral es razonable. <strong>La segunda mitad no se sostiene:</strong> R² no establece capacidad predictiva, y amarrar las dos cosas al mismo umbral hace que un modelo inservible pase el criterio.</p>
+    <p>Un caso calculado sobre un dataset real de 30 lentes barridos de −1 a −7 D, con spec de ±0.25 D:</p>
+    <table class="tbl">
+      <thead><tr><th>R²</th><th>s (S·y·x)</th><th>MAE</th><th>PI ≈ ±2s</th><th>Escape, proceso centrado</th></tr></thead>
+      <tbody>
+        <tr><td>0.984</td><td>0.320 D</td><td>0.240 D</td><td>±0.64 D</td><td><strong>≈ 43%</strong></td></tr>
+      </tbody>
+    </table>
+    <p>Pasa el umbral de 70% con holgura y bota cuatro de cada diez lentes. El error promedio (0.240 D) casi iguala la ventana completa de tolerancia. Si alguien defiende esa correlación con "R² de 98%", está reportando un modelo que no sirve para aceptar piezas.</p>
+    <p>El arreglo es separar lo que está mezclado: dejar R² ≥ 70% como criterio de <em>entrada</em> (¿hay relación aprovechable?) y darle a la predicción su propio criterio, en dioptrías — <strong>2·S·y·x ≤ (USL − LSL)</strong> para capacidad, o MAE contra un test set independiente para honestidad del modelo. Esos sí son defendibles frente a un auditor.</p>
   </div>
 </section>
 
@@ -679,6 +767,7 @@ figcaption b{color:var(--ink);font-weight:600}
 
   <h3>1 · Validar la correlación (desarrollo)</h3>
   <p>Comparas el PI contra un <strong>test set independiente</strong> (datos que no se usaron para ajustar la recta). Si la <strong>cobertura ≈ 95%</strong> —~95% de los puntos caen dentro y ~5% afuera—, el modelo predice honestamente la pieza: capturó bien el centro y σ. Esto valida el <span class="cpi">modelo</span>. Es cobertura cercana al nominal, no "todos adentro", y el test debe cubrir todo el rango.</p>
+  <p>Junto a la cobertura conviene reportar el <strong>MAE sobre ese mismo test set</strong> (sección 10): la cobertura te dice si el ancho del PI es honesto, y el MAE te dice de qué tamaño es el error, en dioptrías. Si el MAE del test queda cerca de 0.80·s, el modelo se comporta afuera como se comportó en casa; si sale muy por encima, el exceso viene de algo que el ajuste no vio —el proceso derivó, el dry que entra trae ruido de medición, o los lentes del test no son los que calibraste— y no se arregla reajustando la recta.</p>
 
   <h3>2 · Evaluar una población nueva contra la modelada</h3>
   <p>Aquí el PI queda <em>congelado</em> como referencia (el σ del modelo) y comparas contra él la variabilidad <strong>real</strong> de un lote o población nueva. Si la población nueva empieza a caer fuera del PI más del ~5%, o si su S observado supera al S·y·x del modelo (prueba F, s²ₙ/s²ᵥ), esa población es <strong>más variable que la modelada</strong>: el proceso cambió o el material es distinto. El PI te da la vara para decir "esto ya no se parece a lo que calibré".</p>
@@ -771,6 +860,7 @@ figcaption b{color:var(--ink);font-weight:600}
       <tr><td>$\text{SSE}$</td><td>$\sum (y_i-\hat{y}_i)^2$ — suma de cuadrados residual</td><td>Error</td></tr>
       <tr><td>$\text{SST}$</td><td>$\sum (y_i-\bar{y})^2$ — variación total de wet</td><td>Total</td></tr>
       <tr><td>$R^2$</td><td>Fracción de la variación explicada</td><td>Calidad (relativo)</td></tr>
+      <tr><td>$\text{MAE}$</td><td>$\tfrac{1}{n}\sum|y_i-\hat{y}_i|$ — error absoluto medio</td><td>Validación · y</td></tr>
       <tr><td>$F$</td><td>Razón de varianzas $s^2_{\text{nuevo}}/s^2_{\text{viejo}}$</td><td>Test de mejora</td></tr>
     </tbody>
   </table>
@@ -801,7 +891,11 @@ figcaption b{color:var(--ink);font-weight:600}
   <div class="eqwrap">$$\begin{aligned} \frac{\text{ancho}_{\text{PI}}}{\text{ancho}_{\text{CI}}}\Big|_{x=\bar{x}} &= \sqrt{n+1} \\[3pt] \text{PI} &\xrightarrow{\,n\to\infty\,} \hat{y}_0 \pm t\,s \\[3pt] \text{prom}\!\left[\tfrac{(x_i-\bar{x})^2}{S_{xx}}\right] = \tfrac{1}{n} &\;\Rightarrow\; \bar{b} \approx t\,s\,\sqrt{1+\tfrac{2}{n}} \end{aligned}$$</div>
 
   <h3>Calidad del ajuste</h3>
-  <div class="eqwrap">$$\begin{aligned} \text{SST} &= \textstyle\sum (y_i-\bar{y})^2 \\ R^2 &= 1 - \text{SSE}/\text{SST} \\ \text{ancho del intervalo} &\;\propto\; s \;\;(\text{no } R^2) \end{aligned}$$</div>
+  <div class="eqwrap">$$\begin{aligned} \text{SST} &= \textstyle\sum (y_i-\bar{y})^2 \quad(\text{contra }\bar{y}) \\ \text{SSE} &= \textstyle\sum (y_i-\hat{y}_i)^2 \quad(\text{contra la recta}) \\ R^2 &= 1 - \text{SSE}/\text{SST} \\ \text{ancho del intervalo} &\;\propto\; s \;\;(\text{no } R^2) \end{aligned}$$</div>
+
+  <h3>Error de predicción (validación)</h3>
+  <div class="eqwrap">$$\begin{aligned} \text{MAE} &= \tfrac{1}{n}\textstyle\sum_i \bigl|\,y_i-\hat{y}_i\,\bigr| \\[3pt] \text{MAE} &\approx \sqrt{2/\pi}\;s \;\approx\; 0.80\,s \quad(\text{errores normales}) \\[3pt] 2\,s &\le (\text{USL}-\text{LSL}) \quad(\text{criterio de capacidad}) \end{aligned}$$</div>
+  <p class="eqnote">s se calcula con los datos del ajuste; el MAE, con datos nuevos e independientes. Misma distancia a la recta, distinto resumen y distinto conjunto de datos.</p>
 
   <h3>Mejora del proceso (revalidación)</h3>
   <div class="eqwrap">$$ F = s^2_{\text{nuevo}} \,/\, s^2_{\text{viejo}} $$</div>
@@ -850,6 +944,27 @@ figcaption b{color:var(--ink);font-weight:600}
     <div class="gd">
       <span class="gl-lbl tec">Técnica</span><div>La diferencia entre el valor observado y el predicho por la recta en ese punto.</div>
       <span class="gl-lbl ater">Aterrizada</span><div>Cuánto se equivocó la recta en ese lente — la distancia vertical del punto a la línea.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">SST — suma de cuadrados total ($\sum (y_i-\bar{y})^2$)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>La variación total de Y respecto a su media muestral: el denominador de $R^2$.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Cuánto se riegan tus wet alrededor de su propio promedio, medido contra la <b>horizontal ȳ</b>. No es error: existe aunque no ajustes ninguna recta. Crece cuando barres un rango ancho de dry, y por eso es la culpable de que R² se vea bien sin que el proceso haya mejorado.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">SSE — suma de cuadrados del error ($\sum (y_i-\hat{y}_i)^2$)</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>La suma de los residuos al cuadrado: la variación que el modelo no explica.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Lo que sobra después de usar el dry, medido contra la <b>recta</b>. Es el error de verdad, pero en dioptrías² y creciendo con n — por eso se divide entre n−2 y se le saca raíz para llegar a s, que sí se lee directo. SST y SSE tienen la misma forma; la diferencia entera es contra qué línea mides.</div>
+    </div>
+  </div>
+  <div class="gl">
+    <div class="gt">MAE — error absoluto medio</div>
+    <div class="gd">
+      <span class="gl-lbl tec">Técnica</span><div>$\tfrac{1}{n}\sum_i|y_i-\hat{y}_i|$. Promedio de los errores en valor absoluto; bajo normalidad, $\text{MAE}\approx\sqrt{2/\pi}\,s\approx 0.80\,s$.</div>
+      <span class="gl-lbl ater">Aterrizada</span><div>Por cuántas dioptrías te equivocas en promedio cuando usas el modelo para decidir. Mismo ingrediente que SSE —la distancia del punto a la recta— pero promediado en vez de sumado, y en valor absoluto en vez de al cuadrado. Lo distintivo no es la aritmética sino con qué datos lo calculas: s sale de los datos del ajuste, el MAE de datos nuevos. Por eso el MAE es la métrica de validación.</div>
     </div>
   </div>
   <div class="gl">
@@ -1113,6 +1228,41 @@ const grid60=(()=>{const a=[];for(let i=0;i<=60;i++)a.push(1+9*i/60);return a;})
   if(xc1!==null){ds.push({data:[{x:xc1,y:0},{x:xc1,y:24}],type:'line',borderColor:'rgba(163,45,45,.7)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false});
     ds.push({data:[{x:xc2,y:0},{x:xc2,y:24}],type:'line',borderColor:'rgba(163,45,45,.7)',borderWidth:1,borderDash:[3,3],pointRadius:0,fill:false});}
   new Chart(document.getElementById('f7'),{data:{datasets:ds},options:{...noChrome,scales:baseAxes(0,24,'Dry power (X)  ·  x̄='+M.mx.toFixed(2))}});
+})();
+
+/* ===== Figura 10: SST vs SSE, sensibilidad al rango ===== */
+(function(){
+  const N=14,CX=5.5,rnd=mulberry32(4181),g=gaussGen(rnd);
+  const noise=[];for(let i=0;i<N;i++)noise.push(2.4*g());
+  let chart;
+  function fit(w){
+    const pts=[];
+    for(let i=0;i<N;i++){const x=CX-w/2+w*i/(N-1);pts.push({x,y:2.0+1.4*x+noise[i]});}
+    let mx=0,my=0;for(const p of pts){mx+=p.x;my+=p.y;}mx/=N;my/=N;
+    let Sxx=0,Sxy=0;for(const p of pts){Sxx+=(p.x-mx)**2;Sxy+=(p.x-mx)*(p.y-my);}
+    const b=Sxy/Sxx,a=my-b*mx;
+    let sse=0,sst=0;for(const p of pts){sse+=(p.y-(a+b*p.x))**2;sst+=(p.y-my)**2;}
+    return {pts,my,a,b,sse,sst,r2:1-sse/sst,s:Math.sqrt(sse/(N-2))};
+  }
+  function render(w){
+    const f=fit(w),x0=CX-w/2,x1=CX+w/2,ds=[];
+    ds.push({data:[{x:0.5,y:f.my},{x:10.5,y:f.my}],type:'line',borderColor:'#5F5E5A',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false});
+    for(const p of f.pts)ds.push({data:[{x:p.x,y:p.y},{x:p.x,y:f.my}],type:'line',borderColor:'rgba(95,94,90,.45)',borderWidth:3,pointRadius:0,fill:false});
+    for(const p of f.pts)ds.push({data:[{x:p.x,y:p.y},{x:p.x,y:f.a+f.b*p.x}],type:'line',borderColor:'#D85A30',borderWidth:3,pointRadius:0,fill:false});
+    ds.push({data:[{x:x0,y:f.a+f.b*x0},{x:x1,y:f.a+f.b*x1}],type:'line',borderColor:PAL.ink,borderWidth:2.5,pointRadius:0,fill:false});
+    ds.push({data:f.pts,type:'scatter',backgroundColor:'#5F5E5A',borderColor:'#5F5E5A',pointRadius:3.2});
+    document.getElementById('f10sst').textContent=f.sst.toFixed(1);
+    document.getElementById('f10sse').textContent=f.sse.toFixed(1);
+    document.getElementById('f10r2').textContent=f.r2.toFixed(3);
+    document.getElementById('f10s').textContent=f.s.toFixed(2);
+    if(chart){chart.data.datasets=ds;chart.update('none');return;}
+    chart=new Chart(document.getElementById('f10'),{data:{datasets:ds},options:{...noChrome,scales:baseAxes(0,22)}});
+  }
+  render(9);
+  document.getElementById('f10w').addEventListener('input',e=>{
+    document.getElementById('f10wv').textContent=(+e.target.value).toFixed(1);
+    render(+e.target.value);
+  });
 })();
 </script>
 </body>
